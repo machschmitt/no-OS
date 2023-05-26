@@ -375,7 +375,6 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 {
 	struct ad7091r8_dev *dev;
 	uint8_t status = 0;
-	//uint8_t tmp_val = 0xFF;
 
 	if (!device || !init_param)
 		return -EINVAL;
@@ -495,15 +494,6 @@ int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 	return ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, &foo);
 }
 
-/***************************************************************************//**
- * @brief Initiates one conversion and reads back the result. During this
- *        process the device runs in normal mode and operates without the busy
- *        indicator.
- *
- * @param dev - The device structure.
- *
- * @return conversionResult - 12bit conversion result.
-*******************************************************************************/
 /**
  * Read one sample.
  * @param dev - The device structure.
