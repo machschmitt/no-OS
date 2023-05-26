@@ -45,10 +45,6 @@
 #include "no_os_delay.h"
 #include "no_os_util.h"
 
-
-// inspired by ad7091r, ad7091r5, ad7768-1,
-//TODO support IRQ
-
 /**
  * Pull the CONVST line up then down to signal to the start of a read/write
  * operation.
@@ -391,8 +387,6 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 	ret = no_os_spi_init(&dev->spi_desc, &init_param.spi_init);
 	if (ret < 0)
 		return ret;
-
-	//TODO apply config
 
 	dev->gpio_reset = NULL;
 	dev->gpio_alert = NULL;
