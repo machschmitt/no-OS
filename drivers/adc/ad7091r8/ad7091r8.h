@@ -252,4 +252,8 @@ uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev,
 			   uint8_t chan,
 			   uint16_t *read_val)
 
+/* Read next channel set in the channel sequencer. */
+uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev,
+				 uint16_t *read_val);
+
 #endif // __AD7091R8_H__

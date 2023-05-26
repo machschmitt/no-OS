@@ -541,3 +541,36 @@ uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t chan,
 
 	return 0;
 }
+
+/**
+ * Read the next channel set in the channel sequencer (channel register).
+ * @param dev - The device structure.
+ * @param read_val - Value.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
+{
+
+	uint8_t buf[2];
+	int32_t ret;
+
+	if (!dev)
+		return -EINVAL;
+
+	ret = ad7091r8_pulse_convst(dev);
+	if (ret < 0)
+		return ret;
+
+	/* Assumes controller host machine is little-endian */
+	buf[0] = 0xf8; /* NOP command */
+	buf[1] = 0x00;
+
+	ret = no_os_spi_write_and_read(dev->spi_desc, buf, buf, 2);
+	if (ret < 0)
+		return ret;
+
+	/* Big-endian to little-endian */
+	*read_val = (buf[0] << 8) | buf[1];
+
+	return 0;
+}
