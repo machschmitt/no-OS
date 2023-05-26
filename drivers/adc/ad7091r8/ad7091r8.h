@@ -52,7 +52,7 @@
 //#define AD7091R8_CONV_DATA_MASK		NO_OS_GENMASK(AD7091R8_BITS - 1, 0)
 //#define AD7091R8_CONV_ALERT_MASK	NO_OS_BIT(12)
 //#define AD7091R8_CONV_CHAN_MASK		NO_OS_GENMASK(15, 13)
-#define AD7091R8_CHAN_LIMIT_MSK		NO_OS_GENMASK(8, 0)
+#define AD7091R8_CHAN_LIMIT_MASK		NO_OS_GENMASK(8, 0)
 
 /* AD7091r8 registers */
 #define AD7091R8_REG_RESULT		0x00
@@ -94,7 +94,7 @@
 #define REG_ALERT_MASK(x, ch)		(x >> (ch * 2))
 
 /* AD7091R8_REG_CHAN_LIMIT */
-#define REG_CHAN_LIMIT_DATA(x)		((x) & AD7091R8_CHAN_LIMIT_MSK)
+#define REG_CHAN_LIMIT_DATA(x)		((x) & AD7091R8_CHAN_LIMIT_MASK)
 
 /* AD7091R8 read/write protocol most significant byte */
 #define AD7091R8_REG_READ(x)	( ((x) << 3) | (1 << 2) )	// Read from register x
