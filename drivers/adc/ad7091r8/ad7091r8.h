@@ -177,6 +177,8 @@ struct ad7091r8_dev {
 	/** SPI descriptor **/
 	//spi_desc *spi_desc;
 	struct no_os_spi_desc *spi_desc;
+	/* CONVST GPIO handler */
+	struct no_os_gpio_desc *gpio_convst;
 	/** RESET GPIO handler. */
 	struct no_os_gpio_desc	*gpio_reset;
 	/** ALERT GPIO handler. */
@@ -191,6 +193,8 @@ struct ad7091r8_init_param {
 	struct no_os_spi_init_param *spi_init;
 	/* GPIO initialization parameters */
 	//struct gpio_init_param *gpio1;
+	/* CONVST GPIO initialization parameters */
+	struct no_os_gpio_init_param *gpio_convst;
 	struct no_os_gpio_init_param *gpio_reset;
 	/* Alert GPIO initialization parameters */
 	struct no_os_gpio_init_param *gpio_alert;

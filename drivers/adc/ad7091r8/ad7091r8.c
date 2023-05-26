@@ -49,6 +49,20 @@
 // inspired by ad7091r, ad7091r5, ad7768-1,
 //TODO support IRQ
 
+/**
+ * Pull the CONVST line up then down to signal to the start of a read/write
+ * operation.
+ * @param dev - The device structure.
+ */
+uint16_t ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
+{
+	/* convst pulse width must be 10 ns minimum, 500 ns maximum */
+	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
+
+	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_HIGH);
+
+	return ret;
+}
 
 /**
  * Write to device.
@@ -62,9 +76,14 @@ int32_t ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 			       uint16_t reg_data)
 {
 	uint8_t buf[2];
+	int32_t ret;
 
 	if (!dev || !reg_data)
 		return -EINVAL;
+
+	ret = ad7091r8_pulse_convst(dev);
+	if (ret < 0)
+		return ret;
 
 	/* Assumes controller host machine is little-endian */
 	buf[0] = AD7091R8_REG_WRITE(reg_addr);
@@ -90,6 +109,10 @@ int32_t ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 
 	if (!dev || !reg_data)
 		return -EINVAL;
+
+	ret = ad7091r8_pulse_convst(dev);
+	if (ret < 0)
+		return ret;
 
 	/* Assumes controller host machine is little-endian */
 	buf[0] = AD7091R8_REG_READ(reg_addr);
@@ -374,6 +397,10 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 	dev->gpio_reset = NULL;
 	dev->gpio_alert = NULL;
 	dev->device_id = init_param.device_id;
+
+	ret = no_os_gpio_get(&dev->gpio_convst, init_param->gpio_convst);
+	if (ret < 0)
+		return ret;
 
 	no_os_gpio_get_optional(&dev->gpio_reset, init_param->gpio_reset);
 	if (dev->gpio_reset != NULL)
