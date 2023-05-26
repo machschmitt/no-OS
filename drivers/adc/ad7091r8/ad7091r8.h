@@ -110,23 +110,6 @@ enum ad7091r8_device_id {
 };
 
 /**
- * @enum ad7091r8_mode
- * @brief Converter supported modes
- */
-enum ad7091r8_mode {
-	/* Normal mode, conversion initiates on the falling edge of CONVST */
-	AD7091R8_MODE_NORMAL = 0,
-	/* Power down mode, set by writing to configuration register */
-	AD7091R8_MODE_PW_DOWN,
-	/* Alert mode, set by writing to configuration register */
-	AD7091R8_MODE_ALERT,
-	/* Busy mode, set by writing to configuration register */
-	AD7091R8_MODE_BUSY,
-	/* Channel sequencer mode, set by writing to channel register */
-	AD7091R8_MODE_SEQUENCER,
-}
-
-/**
  * @enum ad7091r8_sleep_mode
  * @brief Converter supported sleep modes
  */
@@ -192,11 +175,6 @@ enum ad7091r8_alert_type {
 	AD7091R8_LOW_ALERT,
 };
 
-struct ad7091r8_config {
-	// attribs
-	enum ad7091r8_mode mode;
-};
-
 struct ad7091r8_dev {
 	/** SPI descriptor **/
 	//spi_desc *spi_desc;
@@ -206,10 +184,7 @@ struct ad7091r8_dev {
 	/** ALERT GPIO handler. */
 	struct no_os_gpio_desc	*gpio_alert;
 	enum ad7091r8_device_id device_di;
-	/* Configuration register settings */
-	struct ad7091r8_config config;
 	//uint8_t data_buffer[8];
-	enum ad7091r8_mode mode;
 }
 
 struct ad7091r8_init_param {
@@ -222,8 +197,6 @@ struct ad7091r8_init_param {
 	struct no_os_gpio_init_param *gpio_alert;
 	/* AD7091R specific device identifier */
 	enum ad7091r8_device_id device_id;
-	/* Configuration register settings */
-	struct ad7091r8_config config;
 }
 
 /******************************************************************************/
@@ -235,10 +208,6 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 
 /* Remove the device and release resources. */
 int32_t ad7091r8_remove(struct ad7091r8_dev *dev);
-
-/* Set device mode */
-int32_t ad7091r8_set_mode(struct ad7091r8_dev *dev,
-			  enum ad7091r8_mode mode);
 
 /* Set device sleep mode */
 int32_t ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,

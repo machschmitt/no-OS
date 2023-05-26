@@ -135,44 +135,6 @@ int32_t ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
 }
 
 /**
- * Set mode.
- * @param dev - The device structure.
- * @param mode - Converter mode.
- * @return 0 in case of success, negative error code otherwise.
- */
-int32_t ad7091r8_set_mode(struct ad7091r8_dev *dev, enum ad7091r8_mode mode)
-{
-	uint16_t data;
-
-	if (!dev)
-		return -EINVAL;
-
-	switch (mode) {
-	case AD7091R8_MODE_NORMAL:
-		data = 0;
-		break;
-	case AD7091R8_MODE_PW_DOWN:
-		data = REG_CONF_SLEEP_MODE(0x10)
-		break;
-	case AD7091R8_MODE_ALERT:
-		data = REG_CONF_GPO0_ALERT(1);
-		data &= ~REG_CONF_GPO0_BUSY(0);
-		break;
-	case AD7091R8_MODE_BUSY:
-		data = REG_CONF_GPO0_BUSY(1);
-		data &= ~REG_CONF_GPO0_ALERT(0);
-		break;
-	//case AD7091R8_MODE_SEQUENCER:
-	//	data = REG_CONF_AUTO(1); //TODO
-	//	break;
-	default:
-		return -EINVAL;
-	}
-	return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
-				       REG_CONF_MODE_MASK, data);
-}
-
-/**
  * @brief Set device sleep mode.
  *
  * @param dev - The device structure.
@@ -418,10 +380,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 
 	no_os_gpio_get_optional(&dev->gpio_alert, init_param->gpio_alert);
 
-	/* Use normal mode by default */
-	ret = ad7091r8_set_mode(dev, AD7091R8_CONFIG_MODE_NORMAL);
-	if (ret < 0)
-		goto error_i2c;
+	/* Device powers-up in normal mode */
 
 	*device = dev;
 
