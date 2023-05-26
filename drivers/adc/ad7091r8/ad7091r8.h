@@ -43,9 +43,7 @@
 /******************************************************************************/
 /********************** Macros and Constants Definitions **********************/
 /******************************************************************************/
-#define AD7091R2_NUM_CHANNELS				2
-#define AD7091R4_NUM_CHANNELS				4
-#define AD7091R8_NUM_CHANNELS				8
+#define AD7091R_NUM_CHANNELS(id)	(1 << ((id) + 1))
 #define AD7091R8_BITS					12
 
 #define AD7091R8_CONV_MASK		NO_OS_GENMASK(AD7091R8_BITS - 1, 0)
@@ -183,8 +181,9 @@ struct ad7091r8_dev {
 	struct no_os_gpio_desc	*gpio_reset;
 	/** ALERT GPIO handler. */
 	struct no_os_gpio_desc	*gpio_alert;
-	enum ad7091r8_device_id device_di;
 	//uint8_t data_buffer[8];
+	/* AD7091R specific device identifier */
+	enum ad7091r8_device_id device_id;
 }
 
 struct ad7091r8_init_param {

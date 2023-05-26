@@ -280,7 +280,7 @@ int32_t ad7091r8_get_alert(struct ad7091r8_dev *dev, uint8_t channel,
 	if (!dev || !alert)
 		return -EINVAL;
 
-	if (channel >= AD7091R8_NUM_CHANNELS)
+	if (channel >= AD7091R_NUM_CHANNELS(dev->device_id))
 		return -EINVAL;
 
 	ret = ad7091r8_spi_reg_read(dev, AD7091R8_REG_ALERT, &data);
@@ -373,6 +373,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 
 	dev->gpio_reset = NULL;
 	dev->gpio_alert = NULL;
+	dev->device_id = init_param.device_id;
 
 	no_os_gpio_get_optional(&dev->gpio_reset, init_param->gpio_reset);
 	if (dev->gpio_reset != NULL)
@@ -451,7 +452,7 @@ int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 	if (!dev)
 		return -EINVAL;
 
-	if (channel >= AD7091R8_NUM_CHANNELS)
+	if (channel >= AD7091R_NUM_CHANNELS(dev->device_id))
 		return -EINVAL;
 
 	ret = ad7091r8_spi_reg_write(dev, AD7091R8_REG_CHANNEL,
@@ -486,7 +487,7 @@ uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t chan,
 	if (!dev || !read_val)
 		return -EINVAL;
 
-	if (channel >= AD7091R8_NUM_CHANNELS) //TODO adap for -2/-4
+	if (channel >= AD7091R_NUM_CHANNELS(dev->device_id))
 		return -EINVAL;
 
 	ret = ad7091r8_set_channel(dev, channel);
