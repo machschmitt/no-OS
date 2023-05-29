@@ -117,7 +117,7 @@ int32_t ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 	buf[0] = AD7091R8_REG_READ(reg_addr);
 	buf[1] = 0x00;
 
-	ret = no_os_spi_write_and_read(dev->spi_desc, buf, buf, 2);
+	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret < 0)
 		return ret;
 
@@ -409,10 +409,9 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 		     struct ad7091r8_init_param init_param)
 {
 	struct ad7091r8_dev *dev;
-	uint8_t status = 0;
 	int32_t ret;
 
-	if (!device || !init_param)
+	if (!device)
 		return -EINVAL;
 
 	dev = (struct ad7091r8_dev *)no_os_malloc(sizeof(*dev));
@@ -556,7 +555,7 @@ uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
 	buf[0] = 0xf8; /* NOP command */
 	buf[1] = 0x00;
 
-	ret = no_os_spi_write_and_read(dev->spi_desc, buf, buf, 2);
+	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret < 0)
 		return ret;
 
