@@ -165,7 +165,7 @@ int32_t ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
  * @return 0 in case of success, negative error code otherwise.
  */
 int32_t ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
-				enum ad7091r8_sleep_mode mode);
+				enum ad7091r8_sleep_mode mode)
 {
 
 	if (!dev)
