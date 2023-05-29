@@ -89,7 +89,7 @@ int32_t ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 	buf[0] |= reg_data & 0x03;
 	buf[1] = reg_data & 0xFF;
 
-	return no_os_spi_write_and_read(dev->spi_desc, buf, buf, 2);
+	return no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 }
 
 /**
