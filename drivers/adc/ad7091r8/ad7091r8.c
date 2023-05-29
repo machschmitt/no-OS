@@ -508,6 +508,7 @@ int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 			   uint16_t *read_val)
 {
+	uint16_t val;
 	int32_t ret;
 
 	if (!dev || !read_val)
