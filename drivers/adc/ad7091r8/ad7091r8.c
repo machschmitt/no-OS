@@ -427,7 +427,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 	dev->gpio_alert = NULL;
 	dev->device_id = init_param.device_id;
 
-	ret = no_os_gpio_get(&dev->gpio_convst, init_param->gpio_convst);
+	ret = no_os_gpio_get(&dev->gpio_convst, init_param.gpio_convst);
 	if (ret < 0)
 		return ret;
 
@@ -435,7 +435,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 	if (ret < 0)
 		return ret;
 
-	no_os_gpio_get_optional(&dev->gpio_reset, init_param->gpio_reset);
+	no_os_gpio_get_optional(&dev->gpio_reset, init_param.gpio_reset);
 	if (dev->gpio_reset != NULL) {
 		ret = no_os_gpio_direction_output(&dev->gpio_reset,
 						  NO_OS_GPIO_HIGH);
@@ -444,7 +444,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 		ad7091r8_reset(dev, false);
 	}
 
-	no_os_gpio_get_optional(&dev->gpio_alert, init_param->gpio_alert);
+	no_os_gpio_get_optional(&dev->gpio_alert, init_param.gpio_alert);
 
 	/* Device powers-up in normal mode */
 
