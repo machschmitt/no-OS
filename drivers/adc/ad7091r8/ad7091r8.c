@@ -359,6 +359,38 @@ int32_t ad7091r8_get_limit(struct ad7091r8_dev *dev,
 	return 0;
 }
 
+/**
+ * @brief Initiate a software reset or hardware reset through the RESET pin.
+ * @param dev - ad7091r8_dev device handler.
+ * @param is_software - true: Software reset
+ * 		      - false: hardware reset
+ * @return 0 in case of success, negative error code otherwise.
+ */
+int32_t ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
+{
+	int32_t ret;
+
+	if (!dev)
+		return -EINVAL;
+
+	if (is_software) {
+		/* Bit is cleared automatically after reset */
+		return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
+					       REG_CONF_RESET_MASK,
+					       REG_CONF_RESET(1));
+	} else {
+		/* reset pulse delay upon power up, at least 50 ns */
+		no_os_udelay(5);
+		ret = no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_LOW);
+		if (ret < 0)
+			return ret;
+
+		/* reset pulse width, at least 10 ns */
+		no_os_udelay(1);
+		return no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_HIGH);
+	}
+}
+
 /***************************************************************************//**
  * @brief Initializes the communication peripheral and the initial Values for
  *        AD7092R-8 Board.
@@ -419,38 +451,6 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 	*device = dev;
 
 	return ret;
-}
-
-/**
- * @brief Initiate a software reset or hardware reset through the RESET pin.
- * @param dev - ad7091r8_dev device handler.
- * @param is_software - true: Software reset
- * 		      - false: hardware reset
- * @return 0 in case of success, negative error code otherwise.
- */
-int32_t ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
-{
-	int32_t ret;
-
-	if (!dev)
-		return -EINVAL;
-
-	if (is_software) {
-		/* Bit is cleared automatically after reset */
-		return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
-					       REG_CONF_RESET_MASK,
-					       REG_CONF_RESET(1));
-	} else {
-		/* reset pulse delay upon power up, at least 50 ns */
-		no_os_udelay(5);
-		ret = no_os_gpio_set_value(dev->gpio_resetn, NO_OS_GPIO_LOW);
-		if (ret < 0)
-			return ret;
-
-		/* reset pulse width, at least 10 ns */
-		no_os_udelay(1);
-		return no_os_gpio_set_value(dev->gpio_resetn, NO_OS_GPIO_HIGH);
-	}
 }
 
 /***************************************************************************//**
