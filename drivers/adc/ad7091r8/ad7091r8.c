@@ -52,6 +52,8 @@
  */
 uint16_t ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
 {
+	int32_t ret;
+
 	/* convst pulse width must be 10 ns minimum, 500 ns maximum */
 	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
 
@@ -375,6 +377,7 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 {
 	struct ad7091r8_dev *dev;
 	uint8_t status = 0;
+	int32_t ret;
 
 	if (!device || !init_param)
 		return -EINVAL;
@@ -504,6 +507,8 @@ int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t chan,
 			   uint16_t *read_val)
 {
+	int32_t ret;
+
 	if (!dev || !read_val)
 		return -EINVAL;
 
