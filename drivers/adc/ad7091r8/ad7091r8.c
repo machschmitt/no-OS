@@ -53,7 +53,7 @@
  */
 uint16_t ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
 {
-	int32_t ret;
+	int32_t ret = 0;
 
 	/* convst pulse width must be 10 ns minimum, 500 ns maximum */
 	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
