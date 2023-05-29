@@ -189,7 +189,7 @@ struct ad7091r8_dev {
 	struct no_os_gpio_desc	*gpio_alert;
 	/* AD7091R specific device identifier */
 	enum ad7091r8_device_id device_id;
-}
+};
 
 struct ad7091r8_init_param {
 	/* SPI initialization parameters */
@@ -202,7 +202,7 @@ struct ad7091r8_init_param {
 	struct no_os_gpio_init_param *gpio_alert;
 	/* AD7091R specific device identifier */
 	enum ad7091r8_device_id device_id;
-}
+};
 
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
@@ -247,12 +247,12 @@ int32_t ad7091r8_get_limit(struct ad7091r8_dev *dev,
 
 /* Select device channel. */
 int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev,
-			     uint8_t channel)
+			     uint8_t channel);
 
 /* Read one sample. */
 uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev,
 			   uint8_t chan,
-			   uint16_t *read_val)
+			   uint16_t *read_val);
 
 /* Read next channel set in the channel sequencer. */
 uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev,
