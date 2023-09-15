@@ -496,14 +496,23 @@ err_release_spi:
  *
  * @return ret - The result of the remove procedure.
 *******************************************************************************/
-int32_t ad7091r8_remove(struct ad7091r8_dev *dev)
+int ad7091r8_remove(struct ad7091r8_dev *dev)
 {
-	int32_t ret;
+	int ret;
+
+	ret = no_os_gpio_remove(&dev->gpio_reset);
+	if (ret)
+		printf("Failed to realease RESET GPIO");
+
+	ret = no_os_gpio_remove(&dev->gpio_convst);
+	if (ret)
+		printf("Failed to realease CONVST GPIO");
 
 	ret = no_os_spi_remove(dev->spi_desc);
+	if (ret)
+		printf("Failed to realease SPI descriptor");
 
 	no_os_free(dev);
-
 	return ret;
 }
 
