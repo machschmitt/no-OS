@@ -53,10 +53,9 @@
 /********************** Macros and Constants Definitions **********************/
 /******************************************************************************/
 #define AD7091R_NUM_CHANNELS(id)	(1 << ((id) + 1))
-#define AD7091R8_BITS					12
+#define AD7091R8_BITS			12
 
 #define AD7091R8_CONV_MASK		NO_OS_GENMASK(AD7091R8_BITS - 1, 0)
-#define AD7091R8_CHAN_LIMIT_MASK		NO_OS_GENMASK(8, 0)
 
 /* AD7091r8 registers */
 #define AD7091R8_REG_RESULT		0x00
@@ -68,39 +67,28 @@
 #define AD7091R8_REG_CH_HYSTERESIS(ch)	((ch) * 3 + 6)
 
 /* AD7091R8_REG_RESULT */
-#define REG_RESULT_CH_ID(x)		(((x) >> 12) & 0x7)
-#define REG_RESULT_CONV_DATA(x)		((x) & AD7091R8_CONV_MASK)
+#define AD7091R8_REG_RESULT_DATA_MASK	NO_OS_GENMASK(11, 0)
+#define AD7091R8_REG_RESULT_ALT_MASK	NO_OS_BIT(12)
+#define AD7091R8_REG_RESULT_CH_ID_MASK	NO_OS_GENMASK(15, 13)
 
 /* AD7091R8_REG_CONF */
-#define REG_CONF_SLEEP_MODE_MASK	(NO_OS_BIT(1) | NO_OS_BIT(0))
-#define REG_CONF_SLEEP_MODE(x)		((x & 0x03) << 0)
-
+#define REG_CONF_SLEEP_MODE_MASK	NO_OS_GENMASK(1, 0)
 #define REG_CONF_GPO1_MASK		NO_OS_BIT(2)
-#define REG_CONF_GPO1(x)		((x & 0x01) << 2)
-
 #define REG_CONF_GPO0_MASK		NO_OS_BIT(3)
-#define REG_CONF_GPO0(x)		((x & 0x01) << 3)
-
-#define REG_CONF_GPO0_MODE_MASK		(NO_OS_BIT(6) | NO_OS_BIT(5) | NO_OS_BIT(4))
-#define REG_CONF_GPO0_ALERT(x)		((x & 0x01) << 4)
-#define REG_CONF_GPO0_BUSY(x)		((x & 0x01) << 5)
-#define REG_CONF_GPO0_DRIVE_TYPE(x)	((x & 0x01) << 6)
-
+#define REG_CONF_GPO0_MODE_MASK		NO_OS_GENMASK(6, 4)
 #define REG_CONF_ALERT_STICKY_MASK	NO_OS_BIT(7)
-#define REG_CONF_ALERT_STICKY(x)	((x & 0x01) << 7)
-
 #define REG_CONF_RESET_MASK		NO_OS_BIT(9)
-#define REG_CONF_RESET(x)		((x & 0x01) << 9)
 
 /* AD7091R8_REG_ALERT */
 #define REG_ALERT_MASK(x, ch)		(x >> (ch * 2))
 
 /* AD7091R8_REG_CHAN_LIMIT */
-#define REG_CHAN_LIMIT_DATA(x)		((x) & AD7091R8_CHAN_LIMIT_MASK)
+#define AD7091R8_CHAN_LIMIT_MASK	NO_OS_GENMASK(8, 0)
 
-/* AD7091R8 read/write protocol most significant byte */
-#define AD7091R8_REG_READ(x)	( ((x) << 3) | (1 << 2) )	// Read from register x
-#define AD7091R8_REG_WRITE(x)	( ((x) << 3) & (~(1 << 2)) )	// Write to register x
+/* AD7091R8 read/write protocol masks */
+#define AD7091R8_REG_DATA_MSK		NO_OS_GENMASK(9, 0)
+#define AD7091R8_RD_WR_FLAG_MSK		NO_OS_BIT(10)
+#define AD7091R8_REG_ADDR_MSK		NO_OS_GENMASK(15, 11)
 
 /*****************************************************************************/
 /*************************** Types Declarations *******************************/

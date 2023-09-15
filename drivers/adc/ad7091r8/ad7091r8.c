@@ -43,7 +43,6 @@
 #include "ad7091r8.h"
 #include "no_os_alloc.h"
 #include "no_os_error.h"
-#include "no_os_delay.h"
 #include "no_os_util.h"
 
 /**
@@ -51,16 +50,15 @@
  * operation.
  * @param dev - The device structure.
  */
-uint16_t ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
+int ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
 {
-	int32_t ret = 0;
+	int ret;
 
-	/* convst pulse width must be 10 ns minimum, 500 ns maximum */
-	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
+	ret = no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
+	if (ret)
+		return ret;
 
-	ret |= no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_HIGH);
-
-	return ret;
+	return no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_HIGH);
 }
 
 /**
@@ -70,24 +68,30 @@ uint16_t ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
-			       uint8_t reg_addr,
-			       uint16_t reg_data)
+int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
+			   uint8_t reg_addr,
+			   uint16_t reg_data)
 {
-	uint8_t buf[2];
-	int32_t ret;
+	uint16_t buf;
+	int ret;
 
 	if (!dev || !reg_data)
 		return -EINVAL;
 
-	ret = ad7091r8_pulse_convst(dev);
-	if (ret < 0)
-		return ret;
+	if (reg_addr == 0) {
+		ret = ad7091r8_pulse_convst(dev);
+		if (ret)
+			return ret;
+	}
 
-	/* Assumes controller host machine is little-endian */
-	buf[0] = AD7091R8_REG_WRITE(reg_addr);
-	buf[0] |= reg_data & 0x03;
-	buf[1] = reg_data & 0xFF;
+	/*
+	 * AD7091R-2/-4/-8 protocol (datasheet page 31) is to do a single SPI
+	 * transfer with reg address set in bits B15:B11 and value set in B9:B0.
+	 */
+	buf = no_os_put_unaligned_be16(
+			no_os_field_prep(AD7091R8_REG_DATA_MSK, reg_data) |
+			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 1) |
+			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr));
 
 	return no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 }
@@ -99,32 +103,33 @@ int32_t ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
  * @param reg_data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
-			      uint8_t reg_addr,
-			      uint16_t *reg_data)
+int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
+			  uint8_t reg_addr,
+			  uint16_t *reg_data)
 {
-	uint8_t buf[2];
-	int32_t ret;
+	uint16_t buf;
+	int ret;
 
 	if (!dev || !reg_data)
 		return -EINVAL;
 
-	ret = ad7091r8_pulse_convst(dev);
-	if (ret < 0)
-		return ret;
+	if (reg_addr == AD7091R8_REG_RESULT) {
+		ret = ad7091r8_pulse_convst(dev);
+		if (ret)
+			return ret;
+	}
 
-	/* Assumes controller host machine is little-endian */
-	buf[0] = AD7091R8_REG_READ(reg_addr);
-	buf[1] = 0x00;
+	buf = no_os_put_unaligned_be16(
+				no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
+				no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr));
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
-	/* Big-endian to little-endian */
-	*reg_data = (buf[0] << 8) | buf[1];
+	*reg_data = no_os_get_unaligned_be16(buf);
 
-	return ret;
+	return 0;
 }
 
 /**
@@ -135,19 +140,19 @@ int32_t ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
  * @param data - The register data.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
-				uint8_t reg_addr,
-				uint16_t mask,
-				uint16_t data)
+int ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
+			    uint8_t reg_addr,
+			    uint16_t mask,
+			    uint16_t data)
 {
 	uint16_t reg_data;
-	int32_t ret;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
 
 	ret = ad7091r8_spi_reg_read(dev, reg_addr, &reg_data);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	reg_data &= ~mask;
@@ -164,16 +169,14 @@ int32_t ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
-				enum ad7091r8_sleep_mode mode)
+int ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
+			    enum ad7091r8_sleep_mode mode)
 {
-
 	if (!dev)
 		return -EINVAL;
 
 	return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
-				       REG_CONF_SLEEP_MODE_MASK,
-				       REG_CONF_SLEEP_MODE(mode));
+				       REG_CONF_SLEEP_MODE_MASK, mode);
 }
 
 /**
@@ -183,8 +186,8 @@ int32_t ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
  * @param value - Value.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
-			  bool value)
+int ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
+		      bool value)
 {
 	uint16_t mask;
 	uint16_t val;
@@ -195,11 +198,11 @@ int32_t ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
 	switch (port) {
 	case AD7091R8_GPO0:
 		mask = REG_CONF_GPO0_MASK;
-		val = REG_CONF_GPO0(value);
+		val = no_os_field_get(REG_CONF_GPO0_MASK, value);
 		break;
 	case AD7091R8_GPO1:
 		mask = REG_CONF_GPO1_MASK;
-		val = REG_CONF_GPO1(value);
+		val = no_os_field_get(REG_CONF_GPO1_MASK, value);
 		break;
 	default:
 		return -EINVAL;
@@ -216,8 +219,8 @@ int32_t ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
  * 		  - 1: GPO0 is CMOS.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
-			       enum ad7091r8_gpo0_mode mode, bool is_cmos)
+int ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
+			   enum ad7091r8_gpo0_mode mode, bool is_cmos)
 {
 	uint16_t value;
 
@@ -229,16 +232,16 @@ int32_t ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
 		value = 0;
 		break;
 	case AD7091R8_GPO0_ALERT:
-		value = REG_CONF_GPO0_ALERT(1);
+		value = NO_OS_BIT(4);
 		break;
 	case AD7091R8_GPO0_BUSY:
-		value = REG_CONF_GPO0_BUSY(1) | REG_CONF_GPO0_ALERT(1);
+		value = NO_OS_BIT(4) | NO_OS_BIT(5);
 		break;
 	default:
 		return -EINVAL;
-		break;
 	}
-	value |= REG_CONF_GPO0_DRIVE_TYPE(is_cmos);
+	if (is_cmos)
+		value |= NO_OS_BIT(6);
 
 	return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
 				       REG_CONF_GPO0_MODE_MASK, value);
@@ -255,10 +258,10 @@ int32_t ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
  * @param value - Value.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_set_limit(struct ad7091r8_dev *dev,
-			   enum ad7091r8_limit limit,
-			   uint8_t channel,
-			   uint16_t value)
+int ad7091r8_set_limit(struct ad7091r8_dev *dev,
+		       enum ad7091r8_limit limit,
+		       uint8_t channel,
+		       uint16_t value)
 {
 	uint16_t reg;
 
@@ -268,22 +271,29 @@ int32_t ad7091r8_set_limit(struct ad7091r8_dev *dev,
 	switch (limit) {
 	case AD7091R8_LOW_LIMIT:
 		reg = AD7091R8_REG_CH_LOW_LIMIT(channel);
-		value += (value & 0x04) ? 8 : 0;
+		/* Approximate reg value to requested limit value */
+		if (value & 0x04)
+			value += 0x08;
 		break;
 	case AD7091R8_HIGH_LIMIT:
 		reg = AD7091R8_REG_CH_HIGH_LIMIT(channel);
-		value -= (value & 0x04) ? 8 : 0;
+		/* Approximate reg value to requested limit value */
+		if (value & 0x04)
+			value -= 0x08;
 		break;
 	case AD7091R8_HYSTERESIS:
 		reg = AD7091R8_REG_CH_HYSTERESIS(channel);
-		value += (value & 0x04) ? 8 : 0;
+		/* Approximate reg value to requested hysteresis value */
+		if (value & 0x04)
+			value += 0x08;
 		break;
 	default:
 		return -EINVAL;
 	}
 	value = value >> 3;
 
-	return ad7091r8_spi_reg_write(dev, reg, REG_RESULT_CONV_DATA(value));
+	return ad7091r8_spi_reg_write(dev, reg,
+				      no_os_field_get(AD7091R8_CONV_MASK, value));
 }
 
 /**
@@ -293,10 +303,10 @@ int32_t ad7091r8_set_limit(struct ad7091r8_dev *dev,
  * @param alert - Alert type.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_get_alert(struct ad7091r8_dev *dev, uint8_t channel,
-			   enum ad7091r8_alert_type *alert)
+int ad7091r8_get_alert(struct ad7091r8_dev *dev, uint8_t channel,
+		       enum ad7091r8_alert_type *alert)
 {
-	int32_t ret;
+	int ret;
 	uint16_t data;
 
 	if (!dev || !alert)
@@ -324,12 +334,12 @@ int32_t ad7091r8_get_alert(struct ad7091r8_dev *dev, uint8_t channel,
  * @param value - Value.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_get_limit(struct ad7091r8_dev *dev,
-			   enum ad7091r8_limit limit,
-			   uint8_t channel,
-			   uint16_t *value)
+int ad7091r8_get_limit(struct ad7091r8_dev *dev,
+		       enum ad7091r8_limit limit,
+		       uint8_t channel,
+		       uint16_t *value)
 {
-	int32_t ret;
+	int ret;
 	uint16_t reg, data;
 
 	if (!dev || !value)
@@ -354,7 +364,7 @@ int32_t ad7091r8_get_limit(struct ad7091r8_dev *dev,
 	if (ret)
 		return ret;
 
-	*value |= REG_CHAN_LIMIT_DATA(data) << 3;
+	*value |= no_os_field_get(AD7091R8_CHAN_LIMIT_MASK, data) << 3;
 
 	return 0;
 }
@@ -366,9 +376,9 @@ int32_t ad7091r8_get_limit(struct ad7091r8_dev *dev,
  * 		      - false: hardware reset
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
+int ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
 {
-	int32_t ret;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
@@ -377,16 +387,12 @@ int32_t ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
 		/* Bit is cleared automatically after reset */
 		return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
 					       REG_CONF_RESET_MASK,
-					       REG_CONF_RESET(1));
+					       NO_OS_BIT(9));
 	} else {
-		/* reset pulse delay upon power up, at least 50 ns */
-		no_os_udelay(5);
 		ret = no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_LOW);
-		if (ret < 0)
+		if (ret)
 			return ret;
 
-		/* reset pulse width, at least 10 ns */
-		no_os_udelay(1);
 		return no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_HIGH);
 	}
 }
@@ -405,11 +411,11 @@ int32_t ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
  *                         0 - SPI peripheral was initialized and the
  *                             device is present.
 *******************************************************************************/
-int8_t ad7091r8_init(struct ad7091r8_dev **device,
-		     struct ad7091r8_init_param init_param)
+int ad7091r8_init(struct ad7091r8_dev **device,
+		  struct ad7091r8_init_param init_param)
 {
 	struct ad7091r8_dev *dev;
-	int32_t ret;
+	int ret;
 
 	if (!device)
 		return -EINVAL;
@@ -419,36 +425,67 @@ int8_t ad7091r8_init(struct ad7091r8_dev **device,
 		return -ENOMEM;
 
 	ret = no_os_spi_init(&dev->spi_desc, &init_param.spi_init);
-	if (ret < 0)
-		return ret;
+	if (ret) {
+		printf("Failed to init SPI device");
+		goto err_release_spi;
+	}
 
-	dev->gpio_reset = NULL;
-	dev->gpio_alert = NULL;
 	dev->device_id = init_param.device_id;
 
 	ret = no_os_gpio_get(&dev->gpio_convst, init_param.gpio_convst);
-	if (ret < 0)
-		return ret;
-
-	ret = no_os_gpio_direction_output(&dev->gpio_convst, NO_OS_GPIO_HIGH);
-	if (ret < 0)
-		return ret;
-
-	no_os_gpio_get_optional(&dev->gpio_reset, init_param.gpio_reset);
-	if (dev->gpio_reset != NULL) {
-		ret = no_os_gpio_direction_output(&dev->gpio_reset,
-						  NO_OS_GPIO_HIGH);
-		if (ret < 0)
-			return ret;
-		ad7091r8_reset(dev, false);
+	if (ret) {
+		printf("Failed to get CONVST GPIO");
+		goto err_release_convst;
 	}
 
-	no_os_gpio_get_optional(&dev->gpio_alert, init_param.gpio_alert);
+	ret = no_os_gpio_direction_output(&dev->gpio_convst, NO_OS_GPIO_HIGH);
+	if (ret) {
+		printf("Failed to set CONVST GPIO output");
+		goto err_release_convst;
+	}
+
+	ret = no_os_gpio_get(&dev->gpio_reset, init_param.gpio_reset);
+	if (ret) {
+		printf("Failed to get RESET GPIO");
+		goto err_release_reset;
+	}
+
+	ret = no_os_gpio_direction_output(&dev->gpio_reset, NO_OS_GPIO_HIGH);
+	if (ret) {
+		printf("Failed to set RESET GPIO output");
+		goto err_release_reset;
+	}
+
+	ret = ad7091r8_reset(dev, false);
+	if (ret)
+		printf("WARNING: Failed to pulse RESET pin on power up");
+
+	//ret = no_os_gpio_get_optional(&dev->gpio_alert, init_param.gpio_alert);
+	//if (!ret && &dev->gpio_alert) {
+	//	ret = no_os_gpio_direction_output(&dev->gpio_alert,
+	//					  NO_OS_GPIO_HIGH);
+	//	if (ret)
+	//		printf("WARNING: Failed to set ALERT pin output");
+	//}
 
 	/* Device powers-up in normal mode */
-
 	*device = dev;
 
+	return 0;
+
+err_release_reset:
+	if(no_os_gpio_remove(&dev->gpio_reset))
+		printf("Failed to realease RESET GPIO");
+
+err_release_convst:
+	if(no_os_gpio_remove(&dev->gpio_convst))
+		printf("Failed to realease CONVST GPIO");
+
+err_release_spi:
+	if(no_os_spi_remove(&dev->spi_desc))
+		printf("Failed to realease SPI descriptor");
+
+	no_os_free(dev);
 	return ret;
 }
 
@@ -476,10 +513,10 @@ int32_t ad7091r8_remove(struct ad7091r8_dev *dev)
  * @param channel - Channel.
  * @return 0 in case of success, negative error code otherwise.
  */
-int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
+int ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 {
 	uint16_t foo;
-	int32_t ret;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
@@ -504,11 +541,11 @@ int32_t ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
  * @param read_val - Value.
  * @return 0 in case of success, negative error code otherwise.
  */
-uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
-			   uint16_t *read_val)
+int ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
+		      uint16_t *read_val)
 {
 	uint16_t val;
-	int32_t ret;
+	int ret;
 
 	if (!dev || !read_val)
 		return -EINVAL;
@@ -524,10 +561,10 @@ uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 	if (ret)
 		return ret;
 
-	if (REG_RESULT_CH_ID(val) != channel)
+	if (no_os_field_get(AD7091R8_REG_RESULT_CH_ID_MASK, val) != channel)
 		return -1;
 
-	*read_val = REG_RESULT_CONV_DATA(val);
+	*read_val = no_os_field_get(AD7091R8_REG_RESULT_DATA_MASK, val);
 
 	return 0;
 }
@@ -538,17 +575,17 @@ uint16_t ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
  * @param read_val - Value.
  * @return 0 in case of success, negative error code otherwise.
  */
-uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
+int ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
 {
 
 	uint8_t buf[2];
-	int32_t ret;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
 
 	ret = ad7091r8_pulse_convst(dev);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	/* Assumes controller host machine is little-endian */
@@ -556,7 +593,7 @@ uint16_t ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
 	buf[1] = 0x00;
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
-	if (ret < 0)
+	if (ret)
 		return ret;
 
 	/* Big-endian to little-endian */
