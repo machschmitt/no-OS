@@ -1,0 +1,5 @@
+
+#define UART_BAUDRATE   57600
+#define UART_DEVICE_ID  0
+#define INTC_DEVICE_ID  0
+#define UART_IRQ_ID     UART0_IRQn
