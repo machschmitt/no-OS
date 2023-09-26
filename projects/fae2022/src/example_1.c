@@ -10,6 +10,8 @@ int main()
 	};
 	struct no_os_uart_init_param uart_ip = {
 		.device_id = 0,
+		.irq_id = UART0_IRQn,
+		.asynchronous_rx = true,
 		//.baud_rate = 57600,
 		.baud_rate = 115200,
 		//.baud_rate = 9600,
@@ -18,6 +20,7 @@ int main()
 		//.stop = NO_OS_UART_STOP_1_BIT,
 		.stop = NO_OS_UART_STOP_2_BIT,
 		.extra = &max_uart_extra_ip,
+		.platform_ops = &max_uart_ops,
 	};
 	struct no_os_uart_desc *uart_desc;
 	int ret;
