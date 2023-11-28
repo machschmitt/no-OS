@@ -44,6 +44,7 @@
 #include "no_os_alloc.h"
 #include "no_os_error.h"
 #include "no_os_util.h"
+#include "no_os_delay.h"
 
 /**
  * Pull the CONVST line up then down to signal to the start of a read/write
@@ -72,7 +73,7 @@ int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 			   uint8_t reg_addr,
 			   uint16_t reg_data)
 {
-	uint16_t buf;
+	uint8_t buf[2];
 	int ret;
 
 	if (!dev || !reg_data)
@@ -107,7 +108,7 @@ int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 			  uint8_t reg_addr,
 			  uint16_t *reg_data)
 {
-	uint16_t buf;
+	uint8_t buf[2];
 	int ret;
 
 	if (!dev || !reg_data)
@@ -119,16 +120,20 @@ int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 			return ret;
 	}
 
-	 no_os_put_unaligned_be16(
+	no_os_put_unaligned_be16(
 			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
 			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
+
+	/* Reg data only comes out on the next transfer (datasheet figure 52) */
+	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
+	if (ret)
+		return ret;
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret)
 		return ret;
 
 	*reg_data = no_os_get_unaligned_be16(buf);
-
 	return 0;
 }
 
@@ -393,6 +398,7 @@ int ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
 		if (ret)
 			return ret;
 
+		no_os_udelay(1);
 		return no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_HIGH);
 	}
 }
@@ -412,7 +418,7 @@ int ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
  *                             device is present.
 *******************************************************************************/
 int ad7091r8_init(struct ad7091r8_dev **device,
-		  struct ad7091r8_init_param init_param)
+		  struct ad7091r8_init_param *init_param)
 {
 	struct ad7091r8_dev *dev;
 	int ret;
@@ -424,43 +430,39 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	if (!dev)
 		return -ENOMEM;
 
-	ret = no_os_spi_init(&dev->spi_desc, &init_param.spi_init);
+	ret = no_os_spi_init(&dev->spi_desc, init_param->spi_init);
 	if (ret) {
-		printf("Failed to init SPI device");
+		printf("Failed to init SPI device: %d\n\r", ret);
 		goto err_release_spi;
 	}
 
-	dev->device_id = init_param.device_id;
+	dev->device_id = init_param->device_id;
 
-	ret = no_os_gpio_get(&dev->gpio_convst, init_param.gpio_convst);
+	ret = no_os_gpio_get(&dev->gpio_convst, init_param->gpio_convst);
 	if (ret) {
-		printf("Failed to get CONVST GPIO");
+		printf("Failed to get CONVST GPIO\n\r");
 		goto err_release_convst;
 	}
 
-	ret = no_os_gpio_direction_output(&dev->gpio_convst, NO_OS_GPIO_HIGH);
+	ret = no_os_gpio_direction_output(dev->gpio_convst, NO_OS_GPIO_HIGH);
 	if (ret) {
-		printf("Failed to set CONVST GPIO output");
+		printf("Failed to set CONVST GPIO output\n\r");
 		goto err_release_convst;
 	}
 
-	ret = no_os_gpio_get(&dev->gpio_reset, init_param.gpio_reset);
-	if (ret) {
-		printf("Failed to get RESET GPIO");
-		goto err_release_reset;
+	ret = no_os_gpio_get_optional(&dev->gpio_reset, init_param->gpio_reset);
+	if (!ret && dev->gpio_reset) {
+		ret = no_os_gpio_direction_output(dev->gpio_reset,
+						  NO_OS_GPIO_HIGH);
+		if (ret)
+			printf("WARNING: Failed to set RESET GPIO output\n\r");
 	}
 
-	ret = no_os_gpio_direction_output(&dev->gpio_reset, NO_OS_GPIO_HIGH);
-	if (ret) {
-		printf("Failed to set RESET GPIO output");
-		goto err_release_reset;
-	}
-
-	ret = ad7091r8_reset(dev, false);
+	ret = ad7091r8_reset(dev, !dev->gpio_reset);
 	if (ret)
-		printf("WARNING: Failed to pulse RESET pin on power up");
+		printf("WARNING: Failed to RESET on power up\n\r");
 
-	//ret = no_os_gpio_get_optional(&dev->gpio_alert, init_param.gpio_alert);
+	//ret = no_os_gpio_get_optional(&dev->gpio_alert, init_param->gpio_alert);
 	//if (!ret && &dev->gpio_alert) {
 	//	ret = no_os_gpio_direction_output(&dev->gpio_alert,
 	//					  NO_OS_GPIO_HIGH);
@@ -474,16 +476,16 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	return 0;
 
 err_release_reset:
-	if(no_os_gpio_remove(&dev->gpio_reset))
-		printf("Failed to realease RESET GPIO");
+	if(no_os_gpio_remove(dev->gpio_reset))
+		printf("Failed to realease RESET GPIO\n\r");
 
 err_release_convst:
-	if(no_os_gpio_remove(&dev->gpio_convst))
-		printf("Failed to realease CONVST GPIO");
+	if(no_os_gpio_remove(dev->gpio_convst))
+		printf("Failed to realease CONVST GPIO\n\r");
 
 err_release_spi:
-	if(no_os_spi_remove(&dev->spi_desc))
-		printf("Failed to realease SPI descriptor");
+	if(no_os_spi_remove(dev->spi_desc))
+		printf("Failed to realease SPI descriptor\n\r");
 
 	no_os_free(dev);
 	return ret;
@@ -500,11 +502,11 @@ int ad7091r8_remove(struct ad7091r8_dev *dev)
 {
 	int ret;
 
-	ret = no_os_gpio_remove(&dev->gpio_reset);
+	ret = no_os_gpio_remove(dev->gpio_reset);
 	if (ret)
 		printf("Failed to realease RESET GPIO");
 
-	ret = no_os_gpio_remove(&dev->gpio_convst);
+	ret = no_os_gpio_remove(dev->gpio_convst);
 	if (ret)
 		printf("Failed to realease CONVST GPIO");
 
@@ -597,16 +599,12 @@ int ad7091r8_sequenced_read(struct ad7091r8_dev *dev, uint16_t *read_val)
 	if (ret)
 		return ret;
 
-	/* Assumes controller host machine is little-endian */
-	buf[0] = 0xf8; /* NOP command */
-	buf[1] = 0x00;
+	no_os_put_unaligned_be16(0xf800, buf); /* NOP command */
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret)
 		return ret;
 
-	/* Big-endian to little-endian */
-	*read_val = (buf[0] << 8) | buf[1];
-
+	*read_val = no_os_get_unaligned_be16(buf);
 	return 0;
 }
