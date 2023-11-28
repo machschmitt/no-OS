@@ -197,7 +197,7 @@ struct ad7091r8_init_param {
 /******************************************************************************/
 /* Initialize the device. */
 int ad7091r8_init(struct ad7091r8_dev **device,
-		     struct ad7091r8_init_param init_param);
+		     struct ad7091r8_init_param *init_param);
 
 /* Remove the device and release resources. */
 int ad7091r8_remove(struct ad7091r8_dev *dev);
@@ -245,5 +245,15 @@ int ad7091r8_read_one(struct ad7091r8_dev *dev,
 /* Read next channel set in the channel sequencer. */
 int ad7091r8_sequenced_read(struct ad7091r8_dev *dev,
 				 uint16_t *read_val);
+
+/* Read device register. */
+int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
+			  uint8_t reg_addr,
+			  uint16_t *reg_data);
+
+/* Write to device register. */
+int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
+			   uint8_t reg_addr,
+			   uint16_t reg_data);
 
 #endif // __AD7091R8_H__
