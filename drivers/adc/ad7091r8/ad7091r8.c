@@ -470,6 +470,15 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	//		printf("WARNING: Failed to set ALERT pin output");
 	//}
 
+	/* Use external vref or enable internal vref */
+	dev->vref_mv = init_param->vref_mv;
+	if (!dev->vref_mv) {
+		dev->vref_mv = 2500;
+		ad7091r8_set_sleep_mode(dev, AD7091R8_SLEEP_MODE_1);
+		if (ret)
+			printf("WARNING: Failed to enable internal vref\n\r");
+	}
+
 	/* Device powers-up in normal mode */
 	*device = dev;
 

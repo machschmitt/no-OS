@@ -169,6 +169,8 @@ struct ad7091r8_dev {
 	/** SPI descriptor **/
 	//spi_desc *spi_desc;
 	struct no_os_spi_desc *spi_desc;
+	/* Reference voltage */
+	int vref_mv;
 	/* CONVST GPIO handler */
 	struct no_os_gpio_desc *gpio_convst;
 	/** RESET GPIO handler. */
@@ -182,6 +184,8 @@ struct ad7091r8_dev {
 struct ad7091r8_init_param {
 	/* SPI initialization parameters */
 	struct no_os_spi_init_param *spi_init;
+	/* External Voltage Reference */
+	int vref_mv;
 	/* CONVST GPIO initialization parameters */
 	struct no_os_gpio_init_param *gpio_convst;
 	/* Reset GPIO initialization parameters */
