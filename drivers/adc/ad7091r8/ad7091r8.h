@@ -99,6 +99,12 @@ enum ad7091r8_device_id {
 	AD7091R8,
 };
 
+static char * const ad7091r8_names[] = {
+	[AD7091R2] = "ad7091r-2",
+	[AD7091R4] = "ad7091r-4",
+	[AD7091R8] = "ad7091r-8",
+};
+
 /**
  * @enum ad7091r8_sleep_mode
  * @brief Converter supported sleep modes
