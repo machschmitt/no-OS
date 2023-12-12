@@ -207,54 +207,54 @@ struct ad7091r8_init_param {
 /******************************************************************************/
 /* Initialize the device. */
 int ad7091r8_init(struct ad7091r8_dev **device,
-		     struct ad7091r8_init_param *init_param);
+		  struct ad7091r8_init_param *init_param);
 
 /* Remove the device and release resources. */
 int ad7091r8_remove(struct ad7091r8_dev *dev);
 
 /* Set device sleep mode */
 int ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
-				enum ad7091r8_sleep_mode mode);
+			    enum ad7091r8_sleep_mode mode);
 
 /* Set device set port value */
 int ad7091r8_set_port(struct ad7091r8_dev *dev,
-			  enum ad7091r8_port port,
-			  bool value);
+		      enum ad7091r8_port port,
+		      bool value);
 
 /* Set device set GPO0 mode */
 int ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
-			       enum ad7091r8_gpo0_mode mode,
-			       bool is_cmos);
+			   enum ad7091r8_gpo0_mode mode,
+			   bool is_cmos);
 
 /* Set high limit, low limit, hysteresis. */
 int ad7091r8_set_limit(struct ad7091r8_dev *dev,
-			   enum ad7091r8_limit limit,
-			   uint8_t channel,
-			   uint16_t value);
+		       enum ad7091r8_limit limit,
+		       uint8_t channel,
+		       uint16_t value);
 
 /* Get alert. */
 int ad7091r8_get_alert(struct ad7091r8_dev *dev,
-			   uint8_t channel,
-			   enum ad7091r8_alert_type *alert);
+		       uint8_t channel,
+		       enum ad7091r8_alert_type *alert);
 
 /* Get high limit, low limit, hysteresis. */
 int ad7091r8_get_limit(struct ad7091r8_dev *dev,
-			   enum ad7091r8_limit limit,
-			   uint8_t channel,
-			   uint16_t *value);
+		       enum ad7091r8_limit limit,
+		       uint8_t channel,
+		       uint16_t *value);
 
 /* Select device channel. */
 int ad7091r8_set_channel(struct ad7091r8_dev *dev,
-			     uint8_t channel);
+			 uint8_t channel);
 
 /* Read one sample. */
 int ad7091r8_read_one(struct ad7091r8_dev *dev,
-			   uint8_t chan,
-			   uint16_t *read_val);
+		      uint8_t chan,
+		      uint16_t *read_val);
 
 /* Read next channel set in the channel sequencer. */
 int ad7091r8_sequenced_read(struct ad7091r8_dev *dev,
-				 uint16_t *read_val);
+			    uint16_t *read_val);
 
 /* Read device register. */
 int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,

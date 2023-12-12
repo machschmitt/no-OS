@@ -83,9 +83,9 @@ int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 	 * transfer with reg address set in bits B15:B11 and value set in B9:B0.
 	 */
 	no_os_put_unaligned_be16(
-			no_os_field_prep(AD7091R8_REG_DATA_MSK, reg_data) |
-			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 1) |
-			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
+		no_os_field_prep(AD7091R8_REG_DATA_MSK, reg_data) |
+		no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 1) |
+		no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
 
 	return no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 }
@@ -114,8 +114,8 @@ int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 	}
 
 	no_os_put_unaligned_be16(
-			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
-			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
+		no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
+		no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
 
 	/* Reg data only comes out on the next transfer (datasheet figure 52) */
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
@@ -129,8 +129,8 @@ int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 	}
 
 	no_os_put_unaligned_be16(
-			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
-			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
+		no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
+		no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret)
