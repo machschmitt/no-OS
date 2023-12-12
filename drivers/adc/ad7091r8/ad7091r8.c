@@ -74,16 +74,9 @@ int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 			   uint16_t reg_data)
 {
 	uint8_t buf[2];
-	int ret;
 
 	if (!dev || !reg_data)
 		return -EINVAL;
-
-	if (reg_addr == 0) {
-		ret = ad7091r8_pulse_convst(dev);
-		if (ret)
-			return ret;
-	}
 
 	/*
 	 * AD7091R-2/-4/-8 protocol (datasheet page 31) is to do a single SPI
@@ -128,6 +121,16 @@ int ad7091r8_spi_reg_read(struct ad7091r8_dev *dev,
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret)
 		return ret;
+
+	if (reg_addr == AD7091R8_REG_RESULT) {
+		ret = ad7091r8_pulse_convst(dev);
+		if (ret)
+			return ret;
+	}
+
+	no_os_put_unaligned_be16(
+			no_os_field_prep(AD7091R8_RD_WR_FLAG_MSK, 0) |
+			no_os_field_prep(AD7091R8_REG_ADDR_MSK, reg_addr), buf);
 
 	ret = no_os_spi_write_and_read(dev->spi_desc, buf, 2);
 	if (ret)
@@ -484,10 +487,6 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 
 	return 0;
 
-err_release_reset:
-	if(no_os_gpio_remove(dev->gpio_reset))
-		printf("Failed to realease RESET GPIO\n\r");
-
 err_release_convst:
 	if(no_os_gpio_remove(dev->gpio_convst))
 		printf("Failed to realease CONVST GPIO\n\r");
@@ -535,7 +534,6 @@ int ad7091r8_remove(struct ad7091r8_dev *dev)
  */
 int ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 {
-	uint16_t foo;
 	int ret;
 
 	if (!dev)
@@ -544,14 +542,12 @@ int ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 	if (channel >= AD7091R_NUM_CHANNELS(dev->device_id))
 		return -EINVAL;
 
-	ret = ad7091r8_spi_reg_write(dev, AD7091R8_REG_CHANNEL,
-				     NO_OS_BIT(channel));
+	ret = ad7091r8_pulse_convst(dev);
 	if (ret)
 		return ret;
 
-	/* There is a latency of one conversion before the channel conversion
-	 * sequence is updated */
-	return ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, &foo);
+	return ad7091r8_spi_reg_write(dev, AD7091R8_REG_CHANNEL,
+				      NO_OS_BIT(channel));
 }
 
 /**
@@ -564,7 +560,6 @@ int ad7091r8_set_channel(struct ad7091r8_dev *dev, uint8_t channel)
 int ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 		      uint16_t *read_val)
 {
-	uint16_t val;
 	int ret;
 
 	if (!dev || !read_val)
@@ -577,14 +572,9 @@ int ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 	if (ret)
 		return ret;
 
-	ret = ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, &val);
+	ret = ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, read_val);
 	if (ret)
 		return ret;
-
-	if (no_os_field_get(AD7091R8_REG_RESULT_CH_ID_MASK, val) != channel)
-		return -1;
-
-	*read_val = no_os_field_get(AD7091R8_REG_RESULT_DATA_MASK, val);
 
 	return 0;
 }
