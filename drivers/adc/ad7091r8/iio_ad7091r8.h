@@ -64,7 +64,7 @@ struct ad7091r8_iio_dev_init_param {
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
 int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
-		     struct ad7091r8_iio_dev_init_param *init_param);
+		      struct ad7091r8_iio_dev_init_param *init_param);
 
 int ad7091r8_iio_remove(struct ad7091r8_iio_dev *desc);
 

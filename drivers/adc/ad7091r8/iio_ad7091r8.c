@@ -58,13 +58,13 @@
 //				      uint8_t base_address, uint16_t size,
 //				      uint8_t *write_data);
 static int ad7091r8_iio_read_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
-				uint32_t *readval);
+				 uint32_t *readval);
 static int ad7091r8_iio_write_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
-				 uint32_t writeval);
+				  uint32_t writeval);
 static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
-				const struct iio_ch_info *channel, intptr_t priv);
+				 const struct iio_ch_info *channel, intptr_t priv);
 static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
-				  const struct iio_ch_info *channel, intptr_t priv);
+				   const struct iio_ch_info *channel, intptr_t priv);
 
 /******************************************************************************/
 /************************ Variable Declarations ******************************/
@@ -136,13 +136,13 @@ static struct iio_device ad7091r8_iio_dev = {
 //}
 
 static int ad7091r8_iio_read_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
-				uint32_t *readval)
+				 uint32_t *readval)
 {
 	return ad7091r8_spi_reg_read(dev->ad7091r8_dev, reg, (uint16_t *)readval);
 }
 
 static int ad7091r8_iio_write_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
-				 uint32_t writeval)
+				  uint32_t writeval)
 {
 	return ad7091r8_spi_reg_write(dev->ad7091r8_dev, reg, writeval);
 }
@@ -194,7 +194,7 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
  * 					In case of success, the size of the read data is returned.
 *******************************************************************************/
 static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
-				  const struct iio_ch_info *channel, intptr_t priv)
+				   const struct iio_ch_info *channel, intptr_t priv)
 {
 	struct ad7091r8_iio_dev *iio_ad7091r8;
 	struct ad7091r8_dev *ad7091r8_dev;
@@ -221,7 +221,7 @@ static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
  * @return ret       - Result of the initialization procedure.
 *******************************************************************************/
 int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
-		     struct ad7091r8_iio_dev_init_param *init_param)
+		      struct ad7091r8_iio_dev_init_param *init_param)
 {
 	int ret;
 	struct ad7091r8_iio_dev *desc;
