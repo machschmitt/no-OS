@@ -479,7 +479,6 @@ static int32_t max_uart_remove(struct no_os_uart_desc *desc)
 		no_os_irq_unregister_callback(extra->nvic,
 					      MXC_UART_GET_IRQ(desc->device_id),
 					      &discard);
-		no_os_irq_ctrl_remove(extra->nvic);
 		lf256fifo_remove(desc->rx_fifo);
 		no_os_free(desc->rx_fifo);
 	}
