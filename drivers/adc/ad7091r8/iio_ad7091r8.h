@@ -1,6 +1,6 @@
 /***************************************************************************//**
  *   @file   iio_ad7091r8.h
- *   @brief  Header file of IIO AD7091R8 Driver.
+ *   @brief  Header file of IIO AD7091R8 driver header file.
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
  * Copyright 2023(c) Analog Devices, Inc.
@@ -43,7 +43,6 @@
 /***************************** Include Files **********************************/
 /******************************************************************************/
 #include "iio.h"
-//#include "no_os_irq.h"
 
 /******************************************************************************/
 /*************************** Types Declarations *******************************/
@@ -51,9 +50,6 @@
 struct ad7091r8_iio_dev {
 	struct ad7091r8_dev *ad7091r8_dev;
 	struct iio_device *iio_dev;
-	//int ad7091r8_hpf_3db_table[7][2];
-	//uint32_t active_channels;
-	//uint8_t no_of_active_channels;
 };
 
 struct ad7091r8_iio_dev_init_param {

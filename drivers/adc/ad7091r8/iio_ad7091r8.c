@@ -52,11 +52,6 @@
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
-//extern int ad7091r8_read_device_data(struct ad7091r8_dev *dev,
-//				    uint8_t base_address, uint16_t size, uint8_t *read_data);
-//extern int ad7091r8_write_device_data(struct ad7091r8_dev *dev,
-//				      uint8_t base_address, uint16_t size,
-//				      uint8_t *write_data);
 static int ad7091r8_iio_read_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
 				 uint32_t *readval);
 static int ad7091r8_iio_write_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
@@ -121,19 +116,6 @@ static struct iio_device ad7091r8_iio_dev = {
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
 /******************************************************************************/
-
-//extern int ad7091r8_read_device_data(struct ad7091r8_dev *dev,
-//				    uint8_t base_address, uint16_t size, uint8_t *read_data)
-//{
-//	return 0;
-//}
-//
-//extern int ad7091r8_write_device_data(struct ad7091r8_dev *dev,
-//				      uint8_t base_address, uint16_t size,
-//				      uint8_t *write_data)
-//{
-//	return 0;
-//}
 
 static int ad7091r8_iio_read_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
 				 uint32_t *readval)
@@ -233,7 +215,6 @@ int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
 	desc->iio_dev = &ad7091r8_iio_dev;
 
 	// Initialize ad7091r8 driver
-	//ret = ad7091r8_init(&desc->ad7091r8_dev, *(init_param->ad7091r8_dev_init));
 	ret = ad7091r8_init(&desc->ad7091r8_dev, init_param->ad7091r8_dev_init);
 	if (ret)
 		goto error_ad7091r8_init;
