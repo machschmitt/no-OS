@@ -1,6 +1,6 @@
 /***************************************************************************//**
  *   @file   ad7091r8.h
- *   @brief  Implementation of AD7091R-8 Driver
+ *   @brief  Implementation of AD7091R-8 driver header file.
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
  * Copyright 2023(c) Analog Devices, Inc.
@@ -84,6 +84,8 @@
 
 /* AD7091R8_REG_CHAN_LIMIT */
 #define AD7091R8_CHAN_LIMIT_MASK	NO_OS_GENMASK(8, 0)
+
+#define AD7091R8_HIGH_LIMIT_LSB		0x07
 
 /* AD7091R8 read/write protocol masks */
 #define AD7091R8_REG_DATA_MSK		NO_OS_GENMASK(9, 0)

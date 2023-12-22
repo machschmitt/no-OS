@@ -55,6 +55,9 @@ int ad7091r8_pulse_convst(struct ad7091r8_dev *dev)
 {
 	int ret;
 
+	if (!dev)
+		return -EINVAL;
+
 	ret = no_os_gpio_set_value(dev->gpio_convst, NO_OS_GPIO_LOW);
 	if (ret)
 		return ret;
@@ -156,9 +159,6 @@ int ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
 	uint16_t reg_data;
 	int ret;
 
-	if (!dev)
-		return -EINVAL;
-
 	ret = ad7091r8_spi_reg_read(dev, reg_addr, &reg_data);
 	if (ret)
 		return ret;
@@ -180,9 +180,6 @@ int ad7091r8_spi_write_mask(struct ad7091r8_dev *dev,
 int ad7091r8_set_sleep_mode(struct ad7091r8_dev *dev,
 			    enum ad7091r8_sleep_mode mode)
 {
-	if (!dev)
-		return -EINVAL;
-
 	return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
 				       REG_CONF_SLEEP_MODE_MASK, mode);
 }
@@ -199,9 +196,6 @@ int ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
 {
 	uint16_t mask;
 	uint16_t val;
-
-	if (!dev)
-		return -EINVAL;
 
 	switch (port) {
 	case AD7091R8_GPO0:
@@ -231,9 +225,6 @@ int ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
 			   enum ad7091r8_gpo0_mode mode, bool is_cmos)
 {
 	uint16_t value;
-
-	if (!dev)
-		return -EINVAL;
 
 	switch (mode) {
 	case AD7091R8_GPO0_ENABLED:
@@ -273,32 +264,19 @@ int ad7091r8_set_limit(struct ad7091r8_dev *dev,
 {
 	uint16_t reg;
 
-	if (!dev)
-		return -EINVAL;
-
 	switch (limit) {
 	case AD7091R8_LOW_LIMIT:
 		reg = AD7091R8_REG_CH_LOW_LIMIT(channel);
-		/* Approximate reg value to requested limit value */
-		if (value & 0x04)
-			value += 0x08;
 		break;
 	case AD7091R8_HIGH_LIMIT:
 		reg = AD7091R8_REG_CH_HIGH_LIMIT(channel);
-		/* Approximate reg value to requested limit value */
-		if (value & 0x04)
-			value -= 0x08;
 		break;
 	case AD7091R8_HYSTERESIS:
 		reg = AD7091R8_REG_CH_HYSTERESIS(channel);
-		/* Approximate reg value to requested hysteresis value */
-		if (value & 0x04)
-			value += 0x08;
 		break;
 	default:
 		return -EINVAL;
 	}
-	value = value >> 3;
 
 	return ad7091r8_spi_reg_write(dev, reg,
 				      no_os_field_get(AD7091R8_CONV_MASK, value));
@@ -350,16 +328,13 @@ int ad7091r8_get_limit(struct ad7091r8_dev *dev,
 	int ret;
 	uint16_t reg, data;
 
-	if (!dev || !value)
-		return -EINVAL;
-
 	switch (limit) {
 	case AD7091R8_LOW_LIMIT:
 		reg = AD7091R8_REG_CH_LOW_LIMIT(channel);
 		break;
 	case AD7091R8_HIGH_LIMIT:
 		reg = AD7091R8_REG_CH_HIGH_LIMIT(channel);
-		*value = 0x07;
+		*value = AD7091R8_HIGH_LIMIT_LSB;
 		break;
 	case AD7091R8_HYSTERESIS:
 		reg = AD7091R8_REG_CH_HYSTERESIS(channel);
@@ -407,9 +382,8 @@ int ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
 }
 
 /***************************************************************************//**
- * @brief Initializes the communication peripheral and the initial Values for
- *        AD7092R-8 Board.
- *
+ * Initializes the communication peripheral and the initial Values for
+ * AD7092R-8 Board.
  * @param device     - The device structure.
  * @param init_param - The structure that contains the device initial
  * 		       parameters.
@@ -429,7 +403,7 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	if (!device)
 		return -EINVAL;
 
-	dev = (struct ad7091r8_dev *)no_os_malloc(sizeof(*dev));
+	dev = (struct ad7091r8_dev *)no_os_calloc(1, sizeof(*dev));
 	if (!dev)
 		return -ENOMEM;
 
@@ -464,14 +438,6 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	ret = ad7091r8_reset(dev, !dev->gpio_reset);
 	if (ret)
 		printf("WARNING: Failed to RESET on power up\n\r");
-
-	//ret = no_os_gpio_get_optional(&dev->gpio_alert, init_param->gpio_alert);
-	//if (!ret && &dev->gpio_alert) {
-	//	ret = no_os_gpio_direction_output(&dev->gpio_alert,
-	//					  NO_OS_GPIO_HIGH);
-	//	if (ret)
-	//		printf("WARNING: Failed to set ALERT pin output");
-	//}
 
 	/* Use external vref or enable internal vref */
 	dev->vref_mv = init_param->vref_mv;
@@ -572,11 +538,7 @@ int ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 	if (ret)
 		return ret;
 
-	ret = ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, read_val);
-	if (ret)
-		return ret;
-
-	return 0;
+	return ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, read_val);
 }
 
 /**
