@@ -159,6 +159,10 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
 	if (ret)
 		return ret;
 
+	if ((int16_t)no_os_field_get(AD7091R8_REG_RESULT_CH_ID_MASK, read_val)
+		!= channel->ch_num)
+		return -EIO;
+
 	read_val_32 = no_os_field_get(AD7091R8_REG_RESULT_DATA_MASK, read_val);
 	return iio_format_value(buf, len, IIO_VAL_INT, 1, &read_val_32);
 }
@@ -173,7 +177,7 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
  * @param priv    - Command attribute id.
  *
  * @return ret    - Result of the reading procedure.
- * 					In case of success, the size of the read data is returned.
+ * 		    In case of success, the size of the read data is returned.
 *******************************************************************************/
 static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
 				   const struct iio_ch_info *channel, intptr_t priv)
