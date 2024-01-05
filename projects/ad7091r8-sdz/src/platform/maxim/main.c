@@ -54,6 +54,10 @@
 #include "iio_example.h"
 #endif
 
+#ifdef IIO_TIMER_TRIGGER_EXAMPLE
+#include "iio_timer_trigger_example.h"
+#endif
+
 /***************************************************************************//**
  * @brief Main function execution for Maxim platform.
  *
@@ -65,6 +69,10 @@ int main()
 
 #ifdef IIO_EXAMPLE
 	ret = iio_example_main();
+#endif
+
+#ifdef IIO_TIMER_TRIGGER_EXAMPLE
+	ret = iio_timer_trigger_example_main();
 #endif
 
 #ifdef BASIC_EXAMPLE
@@ -81,9 +89,9 @@ error:
 	no_os_uart_remove(uart_desc);
 #endif
 
-#if (BASIC_EXAMPLE + IIO_EXAMPLE + IIO_TRIGGER_EXAMPLE == 0)
+#if (BASIC_EXAMPLE + IIO_EXAMPLE + IIO_TIMER_TRIGGER_EXAMPLE == 0)
 #error At least one example has to be selected using y value in Makefile.
-#elif (BASIC_EXAMPLE + IIO_EXAMPLE + IIO_TRIGGER_EXAMPLE > 1)
+#elif (BASIC_EXAMPLE + IIO_EXAMPLE + IIO_TIMER_TRIGGER_EXAMPLE > 1)
 #error Selected example projects cannot be enabled at the same time. \
 Please enable only one example and re-build the project.
 #endif

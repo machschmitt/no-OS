@@ -1,7 +1,6 @@
 /***************************************************************************//**
- *   @file   parameters.h
- *   @brief  Definitions specific to Maxim platform used by eval-ad7091r8-sdz
- *           project.
+ *   @file   iio_timer_trigger_example.h
+ *   @brief  IIO timer trigger example header for ad7091r8-sdz project
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
  * Copyright 2023(c) Analog Devices, Inc.
@@ -37,73 +36,33 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef __PARAMETERS_H__
-#define __PARAMETERS_H__
+#ifndef __AD7091R8_IIO_TIMER_TRIGGER_EXAMPLE_H__
+#define __AD7091R8_IIO_TIMER_TRIGGER_EXAMPLE_H__
+
+#ifdef AD7091R2_DEV
+#define ADC_CHANNELS 2
+#elif defined AD7091R4_DEV
+#define ADC_CHANNELS 4
+#else
+#define ADC_CHANNELS 8
+#endif
+
+#ifndef IIO_DATA_BUFFER_SIZE
+#define IIO_DATA_BUFFER_SIZE (400 * ADC_CHANNELS * sizeof(int32_t))
+#endif
 
 /******************************************************************************/
 /***************************** Include Files **********************************/
 /******************************************************************************/
-#include "maxim_irq.h"
-#include "maxim_spi.h"
-#include "maxim_gpio.h"
-#include "maxim_uart.h"
-#include "maxim_uart_stdio.h"
-#include "maxim_timer.h"
-#include "no_os_timer.h"
 
 /******************************************************************************/
-/********************** Macros and Constants Definitions **********************/
+/************************ Variable Declarations ******************************/
 /******************************************************************************/
+//extern uint16_t *ad7091r8_data_buffer;
 
-#ifdef IIO_SUPPORT
-#define INTC_DEVICE_ID		0
-#endif
+/******************************************************************************/
+/************************ Functions Declarations ******************************/
+/******************************************************************************/
+int iio_timer_trigger_example_main();
 
-#define UART_DEVICE_ID		0
-#define UART_IRQ_ID		UART0_IRQn
-#define UART_BAUDRATE		115200
-#define UART_EXTRA		&ad7091r8_uart_extra_ip
-#define UART_OPS		&max_uart_ops
-#define INTC_DEVICE_ID		0
-#define SPI_DEVICE_ID		1
-#define SPI_CS			1
-#define SPI_BAUDRATE		200000
-#define SPI_OPS			&max_spi_ops
-#define SPI_EXTRA		&ad7091r8_spi_extra_ip
-
-#define GPIO_OPS		&max_gpio_ops
-#define GPIO_EXTRA		&ad7091r8_gpio_extra_ip
-#define GPIO_RESET_PIN_NUM	19
-#define GPIO_RESET_PORT_NUM	0
-#define GPIO_RESET_INIT		&ad7091r8_gpio_reset_ip
-#define GPIO_CONVST_PIN_NUM	6
-#define GPIO_CONVST_PORT_NUM	1
-#define GPIO_CONVST_INIT	&ad7091r8_gpio_convst_ip
-#define GPIO_IRQ_ID		0
-
-#ifdef IIO_TIMER_TRIGGER_EXAMPLE
-/* AD7091R-8 Timer settings */
-#define AD7091R8_TIMER_DEVICE_ID    0
-#define AD7091R8_TIMER_FREQ_HZ      1000000
-#define AD7091R8_TIMER_TICKS_COUNT  2000
-#define AD7091R8_TIMER_EXTRA        NULL
-#define TIMER_OPS                   &max_timer_ops
-
-/* AD7091R-8 Timer trigger settings */
-#define AD7091R8_TIMER_IRQ_ID       TMR0_IRQn
-#define TIMER_IRQ_OPS               &max_irq_ops
-#define AD7091R8_TIMER_IRQ_EXTRA    NULL
-
-/* AD7091R-8 timer trigger settings */
-#define AD7091R8_TIMER_CB_HANDLE    MXC_TMR0
-#define AD7091R8_TIMER_TRIG_IRQ_ID  TMR0_IRQn
-
-#endif /* IIO_TIMER_TRIGGER_EXAMPLE */
-
-extern struct max_uart_init_param ad7091r8_uart_extra_ip;
-extern struct max_spi_init_param ad7091r8_spi_extra_ip;
-extern struct max_gpio_init_param ad7091r8_gpio_extra_ip;
-extern struct no_os_gpio_init_param ad7091r8_gpio_reset_ip;
-extern struct no_os_gpio_init_param ad7091r8_gpio_convst_ip;
-
-#endif /* __PARAMETERS_H__ */
+#endif /* __AD7091R8_IIO_TIMER_TRIGGER_EXAMPLE_H__ */
