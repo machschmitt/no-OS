@@ -95,6 +95,18 @@ static struct scan_type ad7091r8_iio_scan_type = {
 	.ch_out = false					\
 }
 
+static struct iio_channel ad7091r2_channels[] = {
+	AD7091R8_CHANNEL(0),
+	AD7091R8_CHANNEL(1),
+};
+
+static struct iio_channel ad7091r4_channels[] = {
+	AD7091R8_CHANNEL(0),
+	AD7091R8_CHANNEL(1),
+	AD7091R8_CHANNEL(2),
+	AD7091R8_CHANNEL(3),
+};
+
 static struct iio_channel ad7091r8_channels[] = {
 	AD7091R8_CHANNEL(0),
 	AD7091R8_CHANNEL(1),
@@ -106,12 +118,9 @@ static struct iio_channel ad7091r8_channels[] = {
 	AD7091R8_CHANNEL(7),
 };
 
-static struct iio_device ad7091r8_iio_dev = {
-	.num_ch = NO_OS_ARRAY_SIZE(ad7091r8_channels),
-	.channels = ad7091r8_channels,
-	.debug_reg_read = (int32_t (*)())ad7091r8_iio_read_reg,
-	.debug_reg_write = (int32_t (*)())ad7091r8_iio_write_reg
-};
+static struct iio_device ad7091r2_iio_device = ad7091r8_iio_device(ad7091r2_channels);
+static struct iio_device ad7091r4_iio_device = ad7091r8_iio_device(ad7091r4_channels);
+static struct iio_device ad7091r8_iio_device = ad7091r8_iio_device(ad7091r8_channels);
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -216,7 +225,25 @@ int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
 	if (!desc)
 		return -ENOMEM;
 
-	desc->iio_dev = &ad7091r8_iio_dev;
+	if (!init_param || !init_param->ad7091r8_dev_init) {
+		ret = -EINVAL;
+		goto error_ad7091r8_init;
+	}
+
+	switch (init_param->ad7091r8_dev_init->device_id) {
+	case AD7091R2:
+		desc->iio_dev = &ad7091r2_iio_device;
+		break;
+	case AD7091R4:
+		desc->iio_dev = &ad7091r4_iio_device;
+		break;
+	case AD7091R8:
+		desc->iio_dev = &ad7091r8_iio_device;
+		break;
+	default:
+		ret = -EINVAL;
+		goto error_ad7091r8_init;
+	}
 
 	// Initialize ad7091r8 driver
 	ret = ad7091r8_init(&desc->ad7091r8_dev, init_param->ad7091r8_dev_init);
