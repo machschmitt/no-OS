@@ -263,4 +263,6 @@ int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 			   uint8_t reg_addr,
 			   uint16_t reg_data);
 
+int ad7091r8_pulse_convst(struct ad7091r8_dev *dev);
+
 #endif // __AD7091R8_H__

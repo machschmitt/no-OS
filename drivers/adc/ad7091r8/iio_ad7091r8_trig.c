@@ -1,6 +1,6 @@
 /***************************************************************************//**
- *   @file   iio_ad7091r8.h
- *   @brief  Header file of IIO AD7091R8 driver header file.
+ *   @file   iio_ad7091r8_trig.c
+ *   @brief  Implementation of iio_ad7091r8_trig.c
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
  * Copyright 2023(c) Analog Devices, Inc.
@@ -36,46 +36,24 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_AD7091R8_H
-#define IIO_AD7091R8_H
 
 /******************************************************************************/
 /***************************** Include Files **********************************/
 /******************************************************************************/
+#include <stdlib.h>
+#include <string.h>
+#include "no_os_error.h"
 #include "iio.h"
+#include "iio_trigger.h"
+#include "iio_ad7091r8.h"
 
 /******************************************************************************/
-/***************************** Define Section *********************************/
+/************************ Variable Declarations *******************************/
 /******************************************************************************/
-#define ad7091r8_iio_device(chans) {					\
-	.num_ch = NO_OS_ARRAY_SIZE(chans),				\
-	.channels = chans,						\
-	.pre_enable = (int32_t (*)())ad7091r8_buffer_preenable,		\
-	.trigger_handler = (int32_t (*)())ad7091r8_trigger_handler,	\
-	.debug_reg_read = (int32_t (*)())ad7091r8_iio_read_reg,		\
-	.debug_reg_write = (int32_t (*)())ad7091r8_iio_write_reg	\
-}
-
-/******************************************************************************/
-/*************************** Types Declarations *******************************/
-/******************************************************************************/
-extern struct iio_trigger ad7091r8_iio_timer_trig_desc;
-
-struct ad7091r8_iio_dev {
-	struct ad7091r8_dev *ad7091r8_dev;
-	struct iio_device *iio_dev;
+#ifndef LINUX_PLATFORM
+struct iio_trigger ad7091r8_iio_timer_trig_desc = {
+	.is_synchronous = true,
+	.enable = iio_trig_enable,
+	.disable = iio_trig_disable,
 };
-
-struct ad7091r8_iio_dev_init_param {
-	struct ad7091r8_init_param *ad7091r8_dev_init;
-};
-
-/******************************************************************************/
-/************************ Functions Declarations ******************************/
-/******************************************************************************/
-int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
-		      struct ad7091r8_iio_dev_init_param *init_param);
-
-int ad7091r8_iio_remove(struct ad7091r8_iio_dev *desc);
-
-#endif /** IIO_AD7091R8_H */
+#endif

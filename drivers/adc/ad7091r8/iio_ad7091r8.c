@@ -60,6 +60,8 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
 				 const struct iio_ch_info *channel, intptr_t priv);
 static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
 				   const struct iio_ch_info *channel, intptr_t priv);
+static int ad7091r8_buffer_preenable(void* dev, uint32_t mask);
+static int32_t ad7091r8_trigger_handler(struct iio_device_data *iio_dev_data);
 
 /******************************************************************************/
 /************************ Variable Declarations ******************************/
@@ -82,7 +84,7 @@ static struct scan_type ad7091r8_iio_scan_type = {
 	.realbits = 12,
 	.storagebits = 16,
 	.shift = 0,
-	.is_big_endian = true
+	.is_big_endian = false
 };
 
 #define AD7091R8_CHANNEL(index) {			\
@@ -184,6 +186,7 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
 		return -EIO;
 
 	read_val_32 = no_os_field_get(AD7091R8_REG_RESULT_DATA_MASK, read_val);
+
 	return iio_format_value(buf, len, IIO_VAL_INT, 1, &read_val_32);
 }
 
@@ -214,6 +217,84 @@ static int ad7091r8_iio_read_scale(void *dev, char *buf, uint32_t len,
 	vals[0] = ad7091r8_dev->vref_mv;
 	vals[1] = 12;
 	return iio_format_value(buf, len, IIO_VAL_FRACTIONAL_LOG2, 2, vals);
+}
+
+/***************************************************************************//**
+ * @brief Prepares the device for buffered capture mode.
+ *
+ * @param dev     - The iio device structure.
+ * @param mask    - Mask of enabled/disabled channels.
+ *
+ * @return ret    - Result of the pre enable setup.
+ * 		    Zero in case of success, errno otherwise.
+*******************************************************************************/
+static int ad7091r8_buffer_preenable(void* dev, uint32_t mask)
+{
+	struct ad7091r8_iio_dev *iio_ad7091r8;
+	struct ad7091r8_dev *ad7091r8;
+	uint16_t dummy;
+	int ret;
+
+	if (!dev)
+		return -ENODEV;
+
+	iio_ad7091r8 = dev;
+	ad7091r8 = iio_ad7091r8->ad7091r8_dev;
+
+	/* Dummy read cycle to pulse CONVST */
+	ret = ad7091r8_pulse_convst(ad7091r8);
+	if (ret)
+		return ret;
+
+	/* Set enabled channels in the channel register */
+	ret = ad7091r8_spi_reg_write(ad7091r8, AD7091R8_REG_CHANNEL, mask);
+	if (ret)
+		return ret;
+
+	/* Dummy read cycle to let the conversion sequence get updated */
+	return ad7091r8_sequenced_read(ad7091r8, &dummy);
+}
+
+
+/***************************************************************************//**
+ * @brief Prepares the device for buffered capture mode.
+ *
+ * @param iio_dev_data    - Object with pointers to ad7091r8_iio_dev and buffer.
+ *
+ * @return ret            - Result of the trigger handler routine.
+ * 		            Zero in case of success, errno otherwise.
+*******************************************************************************/
+static int32_t ad7091r8_trigger_handler(struct iio_device_data *iio_dev_data)
+{
+	struct ad7091r8_iio_dev *iio_ad7091r8;
+	struct ad7091r8_dev *ad7091r8;
+	uint16_t data_buff[8]; /* Data buffer to store one sample-set. */
+	uint16_t read_val;
+	int i, k = 0;
+	int ret;
+
+	if (!iio_dev_data)
+		return -EINVAL;
+
+	iio_ad7091r8 = (struct ad7091r8_iio_dev *)iio_dev_data->dev;
+
+	if (!iio_ad7091r8)
+		return -EINVAL;
+
+	ad7091r8 = iio_ad7091r8->ad7091r8_dev;
+
+	/* For each enabled channel do a sequenced read and push result to buff */
+	for (i = 0; i < AD7091R_NUM_CHANNELS(ad7091r8->device_id); i++) {
+		if (iio_dev_data->buffer->active_mask & NO_OS_BIT(i)) {
+			ret = ad7091r8_sequenced_read(ad7091r8, &read_val);
+			if (ret)
+				return ret;
+
+			data_buff[k++] = read_val;
+		}
+	}
+
+	return iio_buffer_push_scan(iio_dev_data->buffer, data_buff);
 }
 
 
