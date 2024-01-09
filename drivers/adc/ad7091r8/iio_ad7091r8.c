@@ -118,9 +118,12 @@ static struct iio_channel ad7091r8_channels[] = {
 	AD7091R8_CHANNEL(7),
 };
 
-static struct iio_device ad7091r2_iio_device = ad7091r8_iio_device(ad7091r2_channels);
-static struct iio_device ad7091r4_iio_device = ad7091r8_iio_device(ad7091r4_channels);
-static struct iio_device ad7091r8_iio_device = ad7091r8_iio_device(ad7091r8_channels);
+static struct iio_device ad7091r2_iio_device = ad7091r8_iio_device(
+			ad7091r2_channels);
+static struct iio_device ad7091r4_iio_device = ad7091r8_iio_device(
+			ad7091r4_channels);
+static struct iio_device ad7091r8_iio_device = ad7091r8_iio_device(
+			ad7091r8_channels);
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -169,7 +172,7 @@ static int ad7091r8_iio_read_raw(void *dev, char *buf, uint32_t len,
 		return ret;
 
 	if ((int16_t)no_os_field_get(AD7091R8_REG_RESULT_CH_ID_MASK, read_val)
-		!= channel->ch_num)
+	    != channel->ch_num)
 		return -EIO;
 
 	read_val_32 = no_os_field_get(AD7091R8_REG_RESULT_DATA_MASK, read_val);
