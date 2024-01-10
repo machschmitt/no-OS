@@ -1,5 +1,5 @@
 Evaluating AD7091R-2/-4/-8 Devices
-===============================
+==================================
 
 
 Contents
@@ -163,6 +163,7 @@ Alternatively, one can set the desired example flag when calling the compiler to
 make it build the project with the specified example.
 
 .. code-block:: bash
+
         # Builds the project with a simple IIO example.
         make IIO_EXAMPLE=y
 
@@ -206,6 +207,7 @@ Alternatively, one can set the desired example flag when calling the compiler to
 make it build the project with the specified example.
 
 .. code-block:: bash
+
         # Builds the project with an IIO example supporting buffered captures.
         make IIO_TIMER_TRIGGER_EXAMPLE=y
 
@@ -250,7 +252,6 @@ There are a number of connections to make between the ADC evaluation board and t
 
 **Build Command**
 
-        make PLATFORM=maxim TARGET=max78000 IIO_TIMER_TRIGGER_EXAMPLE=y
 .. code-block:: bash
 
         # to delete current build
