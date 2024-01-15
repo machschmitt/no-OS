@@ -408,44 +408,38 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 		return -ENOMEM;
 
 	ret = no_os_spi_init(&dev->spi_desc, init_param->spi_init);
-	if (ret) {
-		printf("Failed to init SPI device: %d\n\r", ret);
+	if (ret)
 		goto err_release_spi;
-	}
 
 	dev->device_id = init_param->device_id;
 
 	ret = no_os_gpio_get(&dev->gpio_convst, init_param->gpio_convst);
-	if (ret) {
-		printf("Failed to get CONVST GPIO\n\r");
+	if (ret)
 		goto err_release_convst;
-	}
 
 	ret = no_os_gpio_direction_output(dev->gpio_convst, NO_OS_GPIO_HIGH);
-	if (ret) {
-		printf("Failed to set CONVST GPIO output\n\r");
+	if (ret)
 		goto err_release_convst;
-	}
 
 	ret = no_os_gpio_get_optional(&dev->gpio_reset, init_param->gpio_reset);
 	if (!ret && dev->gpio_reset) {
 		ret = no_os_gpio_direction_output(dev->gpio_reset,
 						  NO_OS_GPIO_HIGH);
 		if (ret)
-			printf("WARNING: Failed to set RESET GPIO output\n\r");
+			goto err_release_reset;
 	}
 
 	ret = ad7091r8_reset(dev, !dev->gpio_reset);
 	if (ret)
-		printf("WARNING: Failed to RESET on power up\n\r");
+		goto err_release_reset;
 
 	/* Use external vref or enable internal vref */
 	dev->vref_mv = init_param->vref_mv;
 	if (!dev->vref_mv) {
 		dev->vref_mv = 2500;
-		ad7091r8_set_sleep_mode(dev, AD7091R8_SLEEP_MODE_1);
+		ret = ad7091r8_set_sleep_mode(dev, AD7091R8_SLEEP_MODE_1);
 		if (ret)
-			printf("WARNING: Failed to enable internal vref\n\r");
+			goto err_release_reset;
 	}
 
 	/* Device powers-up in normal mode */
@@ -453,13 +447,15 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 
 	return 0;
 
+err_release_reset:
+	if (dev->gpio_reset)
+		no_os_gpio_remove(dev->gpio_reset);
+
 err_release_convst:
-	if(no_os_gpio_remove(dev->gpio_convst))
-		printf("Failed to realease CONVST GPIO\n\r");
+	no_os_gpio_remove(dev->gpio_convst);
 
 err_release_spi:
-	if(no_os_spi_remove(dev->spi_desc))
-		printf("Failed to realease SPI descriptor\n\r");
+	no_os_spi_remove(dev->spi_desc);
 
 	no_os_free(dev);
 	return ret;
@@ -478,15 +474,15 @@ int ad7091r8_remove(struct ad7091r8_dev *dev)
 
 	ret = no_os_gpio_remove(dev->gpio_reset);
 	if (ret)
-		printf("Failed to realease RESET GPIO");
+		return ret;
 
 	ret = no_os_gpio_remove(dev->gpio_convst);
 	if (ret)
-		printf("Failed to realease CONVST GPIO");
+		return ret;
 
 	ret = no_os_spi_remove(dev->spi_desc);
 	if (ret)
-		printf("Failed to realease SPI descriptor");
+		return ret;
 
 	no_os_free(dev);
 	return ret;
