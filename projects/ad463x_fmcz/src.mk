@@ -27,9 +27,15 @@ SRCS +=	$(PLATFORM_DRIVERS)/xilinx_axi_io.c \
 	$(PLATFORM_DRIVERS)/xilinx_gpio.c \
 	$(PLATFORM_DRIVERS)/xilinx_spi.c \
 	$(PLATFORM_DRIVERS)/xilinx_delay.c
-ifeq (y,$(strip $(IIOD)))
-LIBRARIES += iio
-SRC_DIRS += $(NO-OS)/iio/iio_app
+#SRCS +=	drivers/platform/xilinx/xilinx_axi_io.c \
+#	drivers/platform/xilinx/xilinx_gpio.c \
+#	drivers/platform/xilinx/xilinx_spi.c \
+#	drivers/platform/xilinx/xilinx_delay.c
+
+#ifeq (y,$(strip $(IIOD)))
+#LIBRARIES += iio
+	#drivers/platform/xilinx/xilinx_uart.c
+#SRC_DIRS += $(NO-OS)/iio/iio_app
 SRCS += $(PLATFORM_DRIVERS)/$(PLATFORM)_uart.c \
 	$(NO-OS)/util/no_os_lf256fifo.c \
 	$(PLATFORM_DRIVERS)/$(PLATFORM)_irq.c \
@@ -37,7 +43,7 @@ SRCS += $(PLATFORM_DRIVERS)/$(PLATFORM)_uart.c \
 	$(DRIVERS)/adc/ad463x/iio_ad463x.c \
 	$(NO-OS)/util/no_os_fifo.c \
 	$(NO-OS)/util/no_os_list.c
-endif
+#endif
 INCS += $(PROJECT)/src/parameters.h
 INCS += $(DRIVERS)/adc/ad463x/ad463x.h \
 	$(DRIVERS)/axi_core/axi_dmac/axi_dmac.h \
@@ -45,10 +51,14 @@ INCS += $(DRIVERS)/adc/ad463x/ad463x.h \
 	$(DRIVERS)/axi_core/axi_pwmgen/axi_pwm_extra.h \
 	$(DRIVERS)/axi_core/spi_engine/spi_engine.h \
 	$(DRIVERS)/axi_core/spi_engine/spi_engine_private.h
+
 INCS +=	$(PLATFORM_DRIVERS)/$(PLATFORM)_spi.h \
 	$(PLATFORM_DRIVERS)/$(PLATFORM)_irq.h \
 	$(PLATFORM_DRIVERS)/$(PLATFORM)_uart.h \
 	$(PLATFORM_DRIVERS)/$(PLATFORM)_gpio.h
+#INCS +=	drivers/platform/xilinx/xilinx_spi.h \
+#	drivers/platform/xilinx/xilinx_irq.h \
+#	drivers/platform/xilinx/xilinx_uart.h
 INCS +=	$(INCLUDE)/no_os_axi_io.h \
 	$(INCLUDE)/no_os_spi.h \
 	$(INCLUDE)/no_os_pwm.h \
@@ -63,11 +73,11 @@ INCS +=	$(INCLUDE)/no_os_axi_io.h \
 	$(INCLUDE)/no_os_print_log.h \
 	$(INCLUDE)/no_os_alloc.h \
 	$(INCLUDE)/no_os_mutex.h
-ifeq (y,$(strip $(IIOD)))
+#ifeq (y,$(strip $(IIOD)))
 INCS += $(DRIVERS)/adc/ad463x/iio_ad463x.h \
 	$(INCLUDE)/no_os_fifo.h \
 	$(INCLUDE)/no_os_list.h
-endif
+#endif
 ifeq (y,$(strip $(ADAQ4224)))
 CFLAGS += -DADAQ4224_DEV=1
 else ifeq (y,$(strip $(AD4030)))

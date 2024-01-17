@@ -54,11 +54,13 @@
 #include "parameters.h"
 #include "no_os_print_log.h"
 
-#ifdef IIO_SUPPORT
-#include "iio_app.h"
+//#ifdef IIO_SUPPORT
+//#include "iio_app.h"
 #include "iio_ad463x.h"
 #include "xilinx_uart.h"
-#endif
+#include "no_os_uart.h"
+//#endif
+#include "no_os_delay.h"
 /******************************************************************************/
 /********************** Macros and Constants Definitions **********************/
 /******************************************************************************/
@@ -67,21 +69,239 @@
 /* Main function */
 int main()
 {
-	uint32_t buf[AD463x_EVB_SAMPLE_NO] __attribute__ ((aligned));
-	struct ad463x_dev *dev;
-	int32_t ret;
-	uint32_t i;
-#ifdef IIO_SUPPORT
-	struct iio_app_desc *app;
-	struct iio_app_init_param app_init_param = { 0 };
+//	uint32_t buf[AD463x_EVB_SAMPLE_NO] __attribute__ ((aligned));
+//	struct ad463x_dev *dev;
+//	int32_t ret;
+//	uint32_t i;
+//#ifdef IIO_SUPPORT
+//	struct iio_app_desc *app;
+//	struct iio_app_init_param app_init_param = { 0 };
+//	struct xil_uart_init_param platform_uart_init_par = {
+//		.type = UART_PS,
+//		.irq_id = UART_IRQ_ID
+//	};
+//
+//	struct no_os_uart_init_param iio_uart_ip = {
+//		.device_id = UART_DEVICE_ID,
+//		.irq_id = UART_IRQ_ID,
+//		.baud_rate = UART_BAUDRATE,
+//		.size = NO_OS_UART_CS_8,
+//		.parity = NO_OS_UART_PAR_NO,
+//		.stop = NO_OS_UART_STOP_1_BIT,
+//		.extra = &platform_uart_init_par,
+//		.platform_ops = &xil_uart_ops
+//	};
+//#endif
+//	struct spi_engine_offload_init_param spi_engine_offload_init_param = {
+//		.offload_config = OFFLOAD_RX_EN,
+//		.rx_dma_baseaddr = AD463x_DMA_BASEADDR,
+//	};
+//
+//	struct spi_engine_init_param spi_eng_init_param  = {
+//		.ref_clk_hz = 160000000,
+//		.type = SPI_ENGINE,
+//		.spi_engine_baseaddr = AD463x_SPI_ENGINE_BASEADDR,
+//		.cs_delay = 0,
+//		.data_width = 24,
+//	};
+//
+//	struct axi_clkgen_init clkgen_init = {
+//		.name = "rx_clkgen",
+//		.base = RX_CLKGEN_BASEADDR,
+//		.parent_rate = 100000000,
+//	};
+//
+//	struct axi_pwm_init_param axi_pwm_init = {
+//		.base_addr = AXI_PWMGEN_BASEADDR,
+//		.ref_clock_Hz = 100000000,
+//	};
+//
+//	struct no_os_pwm_init_param trigger_pwm_init = {
+//		.period_ns = 500,	/* 2Mhz */
+//		.duty_cycle_ns = AD463X_TRIGGER_PULSE_WIDTH_NS,
+//		.polarity = NO_OS_PWM_POLARITY_HIGH,
+//		.platform_ops = &axi_pwm_ops,
+//		.extra = &axi_pwm_init,
+//	};
+//
+//	struct xil_gpio_init_param gpio_extra_param = {
+//		.device_id = GPIO_DEVICE_ID,
+//		.type = GPIO_PS,
+//	};
+//
+//	struct no_os_gpio_init_param ad463x_resetn = {
+//		.number = GPIO_RESETN_1,
+//		.platform_ops = &xil_gpio_ops,
+//		.extra = &gpio_extra_param
+//	};
+//#if ADAQ4224_DEV
+//	/* PGIA gain control inputs */
+//	struct no_os_gpio_init_param ad463x_pgia_a0 = {
+//		.number = 12,
+//		.platform_ops = &xil_gpio_ops,
+//		.extra = &gpio_extra_param
+//	};
+//	struct no_os_gpio_init_param ad463x_pgia_a1 = {
+//		.number = 13,
+//		.platform_ops = &xil_gpio_ops,
+//		.extra = &gpio_extra_param
+//	};
+//#endif
+//
+//	struct no_os_spi_init_param spi_init = {
+//		.chip_select = AD463x_SPI_CS,
+//		.max_speed_hz = 80000000,
+//		.mode = NO_OS_SPI_MODE_0,
+//		.platform_ops = &spi_eng_platform_ops,
+//		.extra = (void*)&spi_eng_init_param,
+//	};
+//
+//	struct ad463x_init_param ad463x_init_param = {
+//		.spi_init = &spi_init,
+//		.offload_init_param = &spi_engine_offload_init_param,
+//		.trigger_pwm_init = &trigger_pwm_init,
+//		.gpio_resetn = &ad463x_resetn,
+//		.clkgen_init = &clkgen_init,
+//		.axi_clkgen_rate = 160000000,
+//		.reg_access_speed = 20000000,
+//		.reg_data_width = 8,
+//		.output_mode = AD463X_32_PATTERN,
+//		.lane_mode = AD463X_TWO_LANES_PER_CH,
+//		.clock_mode = AD463X_SPI_COMPATIBLE_MODE,
+//		.data_rate = AD463X_SDR_MODE,
+//#if ADAQ4224_DEV
+//		.device_id = ID_ADAQ4224, /* dev_id */
+//		.gpio_pgia_a0 = &ad463x_pgia_a0,
+//		.gpio_pgia_a1 = &ad463x_pgia_a1,
+//#elif AD4030_DEV
+//		.device_id = ID_AD4030, /* dev_id */
+//#else
+//		.device_id = ID_AD4630_24, /* dev_id */
+//#endif
+//		.dcache_invalidate_range =
+//		(void (*)(uint32_t, uint32_t))Xil_DCacheInvalidateRange,
+//	};
+//
+//	/* Enable the instruction cache. */
+//	Xil_ICacheEnable();
+//	/* Enable the data cache. */
+//	Xil_DCacheEnable();
+//
+//	ret = ad463x_init(&dev, &ad463x_init_param);
+//	if (ret != 0) {
+//		pr_err("AD463x Initialization failed!");
+//		return ret;
+//	}
+//
+//	pr_info("AD463x Successfully initialized!");
+//
+//	/* Exit register configuration mode */
+//	ret = ad463x_exit_reg_cfg_mode(dev);
+//	if (ret != 0)
+//		return ret;
+//
+//	/* Test Pattern Mode, 32-bit output data, 2 lanes per channel */
+//	ret = ad463x_read_data(dev, buf, AD463x_EVB_SAMPLE_NO);
+//	if (ret != 0)
+//		return ret;
+//
+//	for (i = 0; i < (AD463x_EVB_SAMPLE_NO / 2); i++)
+//		if (buf[i] != AD463X_OUT_DATA_PAT) {
+//			pr_err("AD463x Test Pattern Data read failed!");
+//			return -1;
+//		}
+//
+//	pr_info("AD463x Test Pattern Data successfully read!");
+//
+//	ad463x_remove(dev);
+//
+//	ad463x_init_param.output_mode = AD463X_24_DIFF;
+//
+//	ret = ad463x_init(&dev, &ad463x_init_param);
+//	if (ret != 0)
+//		return ret;
+//
+//	/* Exit register configuration mode */
+//	ret = ad463x_exit_reg_cfg_mode(dev);
+//	if (ret != 0)
+//		return ret;
+//
+//#if ADAQ4224_DEV
+//	/* Estimating a gain of 2500, calculate the closest accepted pgia gain value */
+//	int32_t gain_int = 2;
+//	int32_t gain_fract = 500;
+//	int32_t vref = 5000;
+//	int32_t precision = 1;
+//	int32_t pgia_gain_idx = ad463x_calc_pgia_gain (gain_int, gain_fract, vref,
+//				precision);
+//	/** set pgia gain */
+//	ret = ad463x_set_pgia_gain(dev, pgia_gain_idx);
+//	if (ret != 0)
+//		return ret;
+//#endif
+//
+//#ifndef IIO_SUPPORT
+//	/* Read data */
+//	while (true) {
+//		ret = ad463x_read_data(dev, buf, AD463x_EVB_SAMPLE_NO);
+//		if (ret != 0)
+//			return ret;
+//		for (i = 0; i < AD463x_EVB_SAMPLE_NO; i+=2)
+//			pr_info("ADC sample ch1: %lu : %lu \n", i, buf[i]);
+//		for (i = 1; i < AD463x_EVB_SAMPLE_NO; i+=2)
+//			pr_info("ADC sample ch2: %lu : %lu \n", i-1, buf[i]);
+//	}
+//#else
+//	struct iio_ad463x *iio_ad463x;
+//
+//	struct iio_data_buffer rd_buff = {
+//		.buff = (void *)buf,
+//		.size = sizeof(buf)
+//	};
+//
+//	ret = iio_ad463x_init(&iio_ad463x, dev);
+//	if(ret < 0)
+//		return ret;
+//
+//	struct iio_app_device devices[] = {
+//		IIO_APP_DEVICE("ad463x", iio_ad463x, &iio_ad463x->iio_dev_desc,
+//			       &rd_buff, NULL, NULL),
+//	};
+//
+//	app_init_param.devices = devices;
+//	app_init_param.nb_devices = NO_OS_ARRAY_SIZE(devices);
+//	app_init_param.uart_init_params = iio_uart_ip;
+//
+//	ret = iio_app_init(&app, app_init_param);
+//	if (ret)
+//		return ret;
+//
+//	return iio_app_run(app);
+//
+//#endif
+//
+//	ad463x_remove(dev);
+//
+//	pr_info("Done.\n");
+//
+//	/* Disable the instruction cache. */
+//	Xil_DCacheDisable();
+//	/* Disable the data cache. */
+//	Xil_ICacheDisable();
+//
+//	return 0;
+
+	struct no_os_uart_desc *uart_desc;
+	int ret;
+
 	struct xil_uart_init_param platform_uart_init_par = {
 		.type = UART_PS,
 		.irq_id = UART_IRQ_ID
 	};
-
 	struct no_os_uart_init_param iio_uart_ip = {
 		.device_id = UART_DEVICE_ID,
 		.irq_id = UART_IRQ_ID,
+		.asynchronous_rx = true,
 		.baud_rate = UART_BAUDRATE,
 		.size = NO_OS_UART_CS_8,
 		.parity = NO_OS_UART_PAR_NO,
@@ -89,203 +309,18 @@ int main()
 		.extra = &platform_uart_init_par,
 		.platform_ops = &xil_uart_ops
 	};
-#endif
-	struct spi_engine_offload_init_param spi_engine_offload_init_param = {
-		.offload_config = OFFLOAD_RX_EN,
-		.rx_dma_baseaddr = AD463x_DMA_BASEADDR,
-	};
-
-	struct spi_engine_init_param spi_eng_init_param  = {
-		.ref_clk_hz = 160000000,
-		.type = SPI_ENGINE,
-		.spi_engine_baseaddr = AD463x_SPI_ENGINE_BASEADDR,
-		.cs_delay = 0,
-		.data_width = 24,
-	};
-
-	struct axi_clkgen_init clkgen_init = {
-		.name = "rx_clkgen",
-		.base = RX_CLKGEN_BASEADDR,
-		.parent_rate = 100000000,
-	};
-
-	struct axi_pwm_init_param axi_pwm_init = {
-		.base_addr = AXI_PWMGEN_BASEADDR,
-		.ref_clock_Hz = 100000000,
-	};
-
-	struct no_os_pwm_init_param trigger_pwm_init = {
-		.period_ns = 500,	/* 2Mhz */
-		.duty_cycle_ns = AD463X_TRIGGER_PULSE_WIDTH_NS,
-		.polarity = NO_OS_PWM_POLARITY_HIGH,
-		.platform_ops = &axi_pwm_ops,
-		.extra = &axi_pwm_init,
-	};
-
-	struct xil_gpio_init_param gpio_extra_param = {
-		.device_id = GPIO_DEVICE_ID,
-		.type = GPIO_PS,
-	};
-
-	struct no_os_gpio_init_param ad463x_resetn = {
-		.number = GPIO_RESETN_1,
-		.platform_ops = &xil_gpio_ops,
-		.extra = &gpio_extra_param
-	};
-#if ADAQ4224_DEV
-	/* PGIA gain control inputs */
-	struct no_os_gpio_init_param ad463x_pgia_a0 = {
-		.number = 12,
-		.platform_ops = &xil_gpio_ops,
-		.extra = &gpio_extra_param
-	};
-	struct no_os_gpio_init_param ad463x_pgia_a1 = {
-		.number = 13,
-		.platform_ops = &xil_gpio_ops,
-		.extra = &gpio_extra_param
-	};
-#endif
-
-	struct no_os_spi_init_param spi_init = {
-		.chip_select = AD463x_SPI_CS,
-		.max_speed_hz = 80000000,
-		.mode = NO_OS_SPI_MODE_0,
-		.platform_ops = &spi_eng_platform_ops,
-		.extra = (void*)&spi_eng_init_param,
-	};
-
-	struct ad463x_init_param ad463x_init_param = {
-		.spi_init = &spi_init,
-		.offload_init_param = &spi_engine_offload_init_param,
-		.trigger_pwm_init = &trigger_pwm_init,
-		.gpio_resetn = &ad463x_resetn,
-		.clkgen_init = &clkgen_init,
-		.axi_clkgen_rate = 160000000,
-		.reg_access_speed = 20000000,
-		.reg_data_width = 8,
-		.output_mode = AD463X_32_PATTERN,
-		.lane_mode = AD463X_TWO_LANES_PER_CH,
-		.clock_mode = AD463X_SPI_COMPATIBLE_MODE,
-		.data_rate = AD463X_SDR_MODE,
-#if ADAQ4224_DEV
-		.device_id = ID_ADAQ4224, /* dev_id */
-		.gpio_pgia_a0 = &ad463x_pgia_a0,
-		.gpio_pgia_a1 = &ad463x_pgia_a1,
-#elif AD4030_DEV
-		.device_id = ID_AD4030, /* dev_id */
-#else
-		.device_id = ID_AD4630_24, /* dev_id */
-#endif
-		.dcache_invalidate_range =
-		(void (*)(uint32_t, uint32_t))Xil_DCacheInvalidateRange,
-	};
-
-	/* Enable the instruction cache. */
-	Xil_ICacheEnable();
-	/* Enable the data cache. */
-	Xil_DCacheEnable();
-
-	ret = ad463x_init(&dev, &ad463x_init_param);
-	if (ret != 0) {
-		pr_err("AD463x Initialization failed!");
+	ret = no_os_uart_init(&uart_desc, &iio_uart_ip);
+	if (NO_OS_IS_ERR_VALUE(ret)) {
+		//goto error;
+		no_os_uart_remove(uart_desc);
 		return ret;
 	}
 
-	pr_info("AD463x Successfully initialized!");
-
-	/* Exit register configuration mode */
-	ret = ad463x_exit_reg_cfg_mode(dev);
-	if (ret != 0)
-		return ret;
-
-	/* Test Pattern Mode, 32-bit output data, 2 lanes per channel */
-	ret = ad463x_read_data(dev, buf, AD463x_EVB_SAMPLE_NO);
-	if (ret != 0)
-		return ret;
-
-	for (i = 0; i < (AD463x_EVB_SAMPLE_NO / 2); i++)
-		if (buf[i] != AD463X_OUT_DATA_PAT) {
-			pr_err("AD463x Test Pattern Data read failed!");
-			return -1;
-		}
-
-	pr_info("AD463x Test Pattern Data successfully read!");
-
-	ad463x_remove(dev);
-
-	ad463x_init_param.output_mode = AD463X_24_DIFF;
-
-	ret = ad463x_init(&dev, &ad463x_init_param);
-	if (ret != 0)
-		return ret;
-
-	/* Exit register configuration mode */
-	ret = ad463x_exit_reg_cfg_mode(dev);
-	if (ret != 0)
-		return ret;
-
-#if ADAQ4224_DEV
-	/* Estimating a gain of 2500, calculate the closest accepted pgia gain value */
-	int32_t gain_int = 2;
-	int32_t gain_fract = 500;
-	int32_t vref = 5000;
-	int32_t precision = 1;
-	int32_t pgia_gain_idx = ad463x_calc_pgia_gain (gain_int, gain_fract, vref,
-				precision);
-	/** set pgia gain */
-	ret = ad463x_set_pgia_gain(dev, pgia_gain_idx);
-	if (ret != 0)
-		return ret;
-#endif
-
-#ifndef IIO_SUPPORT
-	/* Read data */
-	while (true) {
-		ret = ad463x_read_data(dev, buf, AD463x_EVB_SAMPLE_NO);
-		if (ret != 0)
-			return ret;
-		for (i = 0; i < AD463x_EVB_SAMPLE_NO; i+=2)
-			pr_info("ADC sample ch1: %lu : %lu \n", i, buf[i]);
-		for (i = 1; i < AD463x_EVB_SAMPLE_NO; i+=2)
-			pr_info("ADC sample ch2: %lu : %lu \n", i-1, buf[i]);
+	no_os_uart_stdio(uart_desc);
+	//ret = basic_example_main();
+	while (1) {
+		no_os_mdelay(1000);
+		printf("AD7091R-8 basic_example - Read each channel sequentially\n\r");
+		//pr_info("HELLO");
 	}
-#else
-	struct iio_ad463x *iio_ad463x;
-
-	struct iio_data_buffer rd_buff = {
-		.buff = (void *)buf,
-		.size = sizeof(buf)
-	};
-
-	ret = iio_ad463x_init(&iio_ad463x, dev);
-	if(ret < 0)
-		return ret;
-
-	struct iio_app_device devices[] = {
-		IIO_APP_DEVICE("ad463x", iio_ad463x, &iio_ad463x->iio_dev_desc,
-			       &rd_buff, NULL, NULL),
-	};
-
-	app_init_param.devices = devices;
-	app_init_param.nb_devices = NO_OS_ARRAY_SIZE(devices);
-	app_init_param.uart_init_params = iio_uart_ip;
-
-	ret = iio_app_init(&app, app_init_param);
-	if (ret)
-		return ret;
-
-	return iio_app_run(app);
-
-#endif
-
-	ad463x_remove(dev);
-
-	pr_info("Done.\n");
-
-	/* Disable the instruction cache. */
-	Xil_DCacheDisable();
-	/* Disable the data cache. */
-	Xil_ICacheDisable();
-
-	return 0;
 }

@@ -4,6 +4,8 @@ include src.mk
 
 include ../../tools/scripts/generic.mk
 
-ADAQ4224=y
-AD4030=n
+ADAQ4224=n
+AD4030=y
 AD4630=n
+IIO_SUPPORT=y
+IIOD=y
