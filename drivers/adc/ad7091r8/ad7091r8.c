@@ -400,13 +400,13 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 
 	ret = no_os_spi_init(&dev->spi_desc, init_param->spi_init);
 	if (ret)
-		goto err_release_spi;
+		goto err_free_dev;
 
 	dev->device_id = init_param->device_id;
 
 	ret = no_os_gpio_get(&dev->gpio_convst, init_param->gpio_convst);
 	if (ret)
-		goto err_release_convst;
+		goto err_release_spi;
 
 	ret = no_os_gpio_direction_output(dev->gpio_convst, NO_OS_GPIO_HIGH);
 	if (ret)
@@ -448,6 +448,7 @@ err_release_convst:
 err_release_spi:
 	no_os_spi_remove(dev->spi_desc);
 
+err_free_dev:
 	no_os_free(dev);
 	return ret;
 }
