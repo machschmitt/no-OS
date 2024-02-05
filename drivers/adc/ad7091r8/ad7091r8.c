@@ -439,8 +439,7 @@ int ad7091r8_init(struct ad7091r8_dev **device,
 	return 0;
 
 err_release_reset:
-	if (dev->gpio_reset)
-		no_os_gpio_remove(dev->gpio_reset);
+	no_os_gpio_remove(dev->gpio_reset);
 
 err_release_convst:
 	no_os_gpio_remove(dev->gpio_convst);
