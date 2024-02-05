@@ -3,7 +3,7 @@
  *   @brief  Defines common data to be used by ad7091r8-sdz examples.
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
- * Copyright 2023(c) Analog Devices, Inc.
+ * Copyright 2024(c) Analog Devices, Inc.
  *
  * All rights reserved.
  *

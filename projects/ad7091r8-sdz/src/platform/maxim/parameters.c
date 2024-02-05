@@ -4,7 +4,7 @@
  *           project.
  *   @author Marcelo Schmitt (marcelo.schmitt@analog.com)
 ********************************************************************************
- * Copyright 2023(c) Analog Devices, Inc.
+ * Copyright 2024(c) Analog Devices, Inc.
  *
  * All rights reserved.
  *
