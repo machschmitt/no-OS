@@ -363,14 +363,13 @@ int ad7091r8_reset(struct ad7091r8_dev *dev, bool is_software)
 		return ad7091r8_spi_write_mask(dev, AD7091R8_REG_CONF,
 					       REG_CONF_RESET_MASK,
 					       NO_OS_BIT(9));
-	} else {
-		ret = no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_LOW);
-		if (ret)
-			return ret;
-
-		no_os_udelay(1);
-		return no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_HIGH);
 	}
+	ret = no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_LOW);
+	if (ret)
+		return ret;
+
+	no_os_udelay(1);
+	return no_os_gpio_set_value(dev->gpio_reset, NO_OS_GPIO_HIGH);
 }
 
 /***************************************************************************//**
