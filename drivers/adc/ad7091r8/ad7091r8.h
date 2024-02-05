@@ -82,11 +82,6 @@
 /* AD7091R8_REG_ALERT */
 #define REG_ALERT_MASK(x, ch)		(x >> (ch * 2))
 
-/* AD7091R8_REG_CHAN_LIMIT */
-#define AD7091R8_CHAN_LIMIT_MASK	NO_OS_GENMASK(8, 0)
-
-#define AD7091R8_HIGH_LIMIT_LSB		0x07
-
 /* AD7091R8 read/write protocol masks */
 #define AD7091R8_REG_DATA_MSK		NO_OS_GENMASK(9, 0)
 #define AD7091R8_RD_WR_FLAG_MSK		NO_OS_BIT(10)

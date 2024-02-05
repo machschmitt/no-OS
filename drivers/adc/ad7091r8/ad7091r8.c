@@ -325,8 +325,7 @@ int ad7091r8_get_limit(struct ad7091r8_dev *dev,
 		       uint8_t channel,
 		       uint16_t *value)
 {
-	int ret;
-	uint16_t reg, data;
+	uint16_t reg;
 
 	switch (limit) {
 	case AD7091R8_LOW_LIMIT:
@@ -334,7 +333,6 @@ int ad7091r8_get_limit(struct ad7091r8_dev *dev,
 		break;
 	case AD7091R8_HIGH_LIMIT:
 		reg = AD7091R8_REG_CH_HIGH_LIMIT(channel);
-		*value = AD7091R8_HIGH_LIMIT_LSB;
 		break;
 	case AD7091R8_HYSTERESIS:
 		reg = AD7091R8_REG_CH_HYSTERESIS(channel);
@@ -343,13 +341,7 @@ int ad7091r8_get_limit(struct ad7091r8_dev *dev,
 		return -EINVAL;
 	}
 
-	ret = ad7091r8_spi_reg_read(dev, reg, &data);
-	if (ret)
-		return ret;
-
-	*value |= no_os_field_get(AD7091R8_CHAN_LIMIT_MASK, data) << 3;
-
-	return 0;
+	return ad7091r8_spi_reg_read(dev, reg, &value);
 }
 
 /**
