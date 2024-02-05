@@ -132,7 +132,15 @@ static struct iio_device ad7091r8_iio_device = ad7091r8_iio_device(
 static int ad7091r8_iio_read_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
 				 uint32_t *readval)
 {
-	return ad7091r8_spi_reg_read(dev->ad7091r8_dev, reg, (uint16_t *)readval);
+	uint16_t read_data;
+	int ret;
+
+	return ad7091r8_spi_reg_read(dev->ad7091r8_dev, reg, &read_data);
+	if (ret)
+		return ret;
+
+	*readval = read_data;
+	return 0;
 }
 
 static int ad7091r8_iio_write_reg(struct ad7091r8_iio_dev *dev, uint32_t reg,
