@@ -78,7 +78,7 @@ int ad7091r8_spi_reg_write(struct ad7091r8_dev *dev,
 {
 	uint8_t buf[2];
 
-	if (!dev || !reg_data)
+	if (!dev)
 		return -EINVAL;
 
 	/*
