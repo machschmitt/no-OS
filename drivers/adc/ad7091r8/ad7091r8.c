@@ -341,7 +341,7 @@ int ad7091r8_get_limit(struct ad7091r8_dev *dev,
 		return -EINVAL;
 	}
 
-	return ad7091r8_spi_reg_read(dev, reg, &value);
+	return ad7091r8_spi_reg_read(dev, reg, value);
 }
 
 /**
