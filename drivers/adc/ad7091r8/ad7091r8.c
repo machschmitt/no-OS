@@ -525,13 +525,6 @@ int ad7091r8_read_one(struct ad7091r8_dev *dev, uint8_t channel,
 	if (ret)
 		return ret;
 
-	/*
-	 * Tests with Eval-AD7091R-8SDZ and MAX78000FTHR shown a delay is needed
-	 * here otherwise we get erroneous output from the ADC.
-	 * With the added delay we get correct ADC output codes at sample rates
-	 * up to 1.5KHz.
-	 **/
-	no_os_udelay(50);
 	return ad7091r8_spi_reg_read(dev, AD7091R8_REG_RESULT, read_val);
 }
 
