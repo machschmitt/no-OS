@@ -255,7 +255,6 @@ static int ad7091r8_buffer_preenable(void* dev, uint32_t mask)
 	return ad7091r8_sequenced_read(ad7091r8, &dummy);
 }
 
-
 /***************************************************************************//**
  * @brief Prepares the device for buffered capture mode.
  *
@@ -296,7 +295,6 @@ static int32_t ad7091r8_trigger_handler(struct iio_device_data *iio_dev_data)
 
 	return iio_buffer_push_scan(iio_dev_data->buffer, data_buff);
 }
-
 
 /***************************************************************************//**
  * @brief Initializes the AD7091R8 IIO driver

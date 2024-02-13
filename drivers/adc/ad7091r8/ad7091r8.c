@@ -463,7 +463,7 @@ int ad7091r8_remove(struct ad7091r8_dev *dev)
 		return ret;
 
 	no_os_free(dev);
-	return ret;
+	return 0;
 }
 
 /**
