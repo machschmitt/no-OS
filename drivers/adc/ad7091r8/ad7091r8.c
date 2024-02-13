@@ -224,21 +224,8 @@ int ad7091r8_set_port(struct ad7091r8_dev *dev, enum ad7091r8_port port,
 int ad7091r8_set_gpo0_mode(struct ad7091r8_dev *dev,
 			   enum ad7091r8_gpo0_mode mode, bool is_cmos)
 {
-	uint16_t value;
+	uint16_t value = mode;
 
-	switch (mode) {
-	case AD7091R8_GPO0_ENABLED:
-		value = 0;
-		break;
-	case AD7091R8_GPO0_ALERT:
-		value = NO_OS_BIT(4);
-		break;
-	case AD7091R8_GPO0_BUSY:
-		value = NO_OS_BIT(4) | NO_OS_BIT(5);
-		break;
-	default:
-		return -EINVAL;
-	}
 	if (is_cmos)
 		value |= NO_OS_BIT(6);
 

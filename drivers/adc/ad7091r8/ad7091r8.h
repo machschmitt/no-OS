@@ -135,11 +135,11 @@ enum ad7091r8_port {
  */
 enum ad7091r8_gpo0_mode {
 	/** GPO0 is output port */
-	AD7091R8_GPO0_ENABLED,
+	AD7091R8_GPO0_ENABLED = 0,
 	/** GPO0 is Alert indicator */
-	AD7091R8_GPO0_ALERT,
+	AD7091R8_GPO0_ALERT = 16,
 	/** GPO0 is busy indicator, device is converting */
-	AD7091R8_GPO0_BUSY,
+	AD7091R8_GPO0_BUSY = 48,
 };
 
 /**
