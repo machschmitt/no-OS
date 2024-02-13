@@ -313,10 +313,8 @@ int ad7091r8_iio_init(struct ad7091r8_iio_dev **iio_dev,
 	int ret;
 	struct ad7091r8_iio_dev *desc;
 
-	if (!init_param || !init_param->ad7091r8_dev_init) {
-		ret = -EINVAL;
-		goto error_ad7091r8_init;
-	}
+	if (!init_param || !init_param->ad7091r8_dev_init)
+		return -EINVAL;
 
 	desc = (struct ad7091r8_iio_dev *)no_os_calloc(1, sizeof(*desc));
 	if (!desc)
