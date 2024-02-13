@@ -86,7 +86,14 @@ int iio_example_main()
 
 	ret = iio_app_init(&app, app_init_param);
 	if (ret)
-		return ret;
+		goto remove_iio_ad7091r8;
 
-	return iio_app_run(app);
+	ret = iio_app_run(app);
+
+	iio_app_remove(app);
+
+remove_iio_ad7091r8:
+	ad7091r8_iio_remove(ad7091r8_iio_desc);
+
+	return ret;
 }
