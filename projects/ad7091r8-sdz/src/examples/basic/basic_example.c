@@ -66,7 +66,7 @@ int basic_example_main()
 	/* Use ad7091r4_ip and ad7091r2_ip for AD7091R-4 and AD7091R-2 respectively */
 	ret = ad7091r8_init(&ad7091r8_dev, &ad7091r8_ip);
 	if (ret)
-		goto error;
+		return ret;
 
 	/* Enable all channels */
 	ret = ad7091r8_spi_reg_write(ad7091r8_dev, 0x01, 0xFF);
@@ -86,5 +86,6 @@ int basic_example_main()
 
 error:
 	printf("Error on AD7091R-8 basic_example: %d\n\r", ret);
+	ad7091r8_remove(ad7091r8_dev);
 	return ret;
 }
