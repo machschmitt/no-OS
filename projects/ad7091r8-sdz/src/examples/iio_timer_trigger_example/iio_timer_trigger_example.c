@@ -93,17 +93,17 @@ int iio_timer_trigger_example_main()
 
 	ret = no_os_timer_init(&ad7091r8_timer_desc, &ad7091r8_timer_ip);
 	if (ret)
-		return ret;
+		goto remove_iio_ad7091r8;
 
 
 	ret = no_os_irq_ctrl_init(&ad7091r8_irq_desc, &ad7091r8_timer_irq_ip);
 	if (ret)
-		return ret;
+		goto remove_timer;
 
 
 	ret = no_os_irq_set_priority(ad7091r8_irq_desc, AD7091R8_TIMER_IRQ_ID, 1);
 	if (ret)
-		return ret;
+		goto remove_irq_ctrl;
 
 
 	ad7091r8_timer_irq_ip.extra = ad7091r8_timer_desc->extra;
@@ -113,11 +113,11 @@ int iio_timer_trigger_example_main()
 	/* Initialize hardware trigger */
 	ret = iio_hw_trig_init(&ad7091r8_timer_trig_desc, &ad7091r8_timer_trig_ip);
 	if (ret)
-		return ret;
+		goto remove_irq_ctrl;
 
 	ret = no_os_timer_start(ad7091r8_timer_desc);
 	if (ret)
-		return ret;
+		goto remove_hw_trigger;
 
 	struct iio_app_device iio_devices[] = {
 		IIO_APP_DEVICE(ad7091r8_names[ad7091r8_init_p->device_id],
@@ -142,10 +142,26 @@ int iio_timer_trigger_example_main()
 
 	ret = iio_app_init(&app, app_init_param);
 	if (ret)
-		return ret;
+		goto remove_hw_trigger;
 
 	/* Update the reference to iio_desc */
 	ad7091r8_timer_trig_desc->iio_desc = app->iio_desc;
 
-	return iio_app_run(app);
+	ret = iio_app_run(app);
+
+	iio_app_remove(app);
+
+remove_hw_trigger:
+	iio_hw_trig_remove(ad7091r8_timer_trig_desc);
+
+remove_irq_ctrl:
+	no_os_irq_ctrl_remove(ad7091r8_irq_desc);
+
+remove_timer:
+	no_os_timer_remove(ad7091r8_timer_desc);
+
+remove_iio_ad7091r8:
+	ad7091r8_iio_remove(ad7091r8_iio_desc);
+
+	return ret;
 }
