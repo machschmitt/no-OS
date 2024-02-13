@@ -80,12 +80,10 @@ int main()
 
 	ret = no_os_uart_init(&uart_desc, &ad7091r8_uart_ip);
 	if (NO_OS_IS_ERR_VALUE(ret))
-		goto error;
+		return ret;
 
 	no_os_uart_stdio(uart_desc);
 	ret = basic_example_main();
-
-error:
 	no_os_uart_remove(uart_desc);
 #endif
 
