@@ -108,9 +108,16 @@ static int32_t ad4170_iio_reg_read(struct ad4170_iio_device *dev,
 				   uint32_t reg, uint32_t *readval)
 {
 	uint16_t temp;
+	uint32_t ri;
 	int ret;
 
-	ret = ad4170_reg_read(dev->dev, (uint8_t)reg, &temp, false);
+	for (ri = 0; ri < NO_OS_ARRAY_SIZE(ad4170_regs); ri++) {
+		if (reg == AD4170_ADDR(ri)) {
+			ret = ad4170_spi_reg_read(dev->dev, ad4170_regs[ri],
+						  &temp);
+			break;
+		}
+	}
 	if (!ret)
 		*readval = temp;
 
