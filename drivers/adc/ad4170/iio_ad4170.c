@@ -127,8 +127,14 @@ static int32_t ad4170_iio_reg_read(struct ad4170_iio_device *dev,
 static int32_t ad4170_iio_reg_write(struct ad4170_iio_device *dev,
 				    uint32_t reg, uint32_t writeval)
 {
-	return ad4170_reg_write(dev->dev, (uint8_t)reg, (uint16_t)writeval,
-				false);
+	uint32_t ri;
+	int ret;
+
+	for (ri = 0; ri < NO_OS_ARRAY_SIZE(ad4170_regs); ri++)
+		if (reg == AD4170_ADDR(ri))
+			break;
+
+	return ad4170_spi_reg_write(dev->dev, ad4170_regs[ri], writeval)
 }
 
 static struct iio_attribute ad4170_debug_attrs[] = {
