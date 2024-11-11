@@ -48,7 +48,7 @@
  *  @brief AD4170 IIO device descriptor structure
  */
 struct ad4170_iio_device {
-	struct ad4170_desc *dev;
+	struct ad4170_dev *dev;
 	struct iio_device *iio_dev;
 };
 

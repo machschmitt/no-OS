@@ -39,51 +39,19 @@
 #include "ad4170.h"
 #include "no_os_alloc.h"
 #include "no_os_error.h"
+#include "no_os_util.h"
 
-//#define AD4170_IIO_CH_ATTR_RW(_name, _priv)	\
-//	{					\
-//		.name = _name,			\
-//		.priv = _priv,			\
-//		.show = ad4170_ch_attr_show,	\
-//		.store = ad4170_ch_attr_store,	\
-//	}
-//
-//#define AD4170_IIO_CH_ATTR_RO(_name, _priv)	\
-//	{					\
-//		.name = _name,			\
-//		.priv = _priv,			\
-//		.show = ad4170_ch_attr_show,	\
-//		.store = NULL,			\
-//	}
-//
-//#define AD4170_IIO_CH_ATTR_WO(_name, _priv)	\
-//	{					\
-//		.name = _name,			\
-//		.priv = _priv,			\
-//		.show = NULL,			\
-//		.store = ad4170_ch_attr_store,	\
-//	}
-//
-//#define AD4170_IIO_CH_ATTR_READ_RAW(_name, _priv)	\
-//	{						\
-//		.name = _name,				\
-//		.priv = _priv,				\
-//		.show = ad4170_read_raw,		\
-//		.store = NULL,				\
-//	}
-//
-//#define AD4170_IIO_CH_ATTR_READ_SCALE(_name, _priv)	\
-//	{						\
-//		.name = _name,				\
-//		.priv = _priv,				\
-//		.show = ad4170_read_scale,		\
-//		.store = NULL,				\
-//	}
-
-enum ad4170_attr_priv {
-	AD4170_RAW,
-	AD4170_SCALE,
-};
+/******************************************************************************/
+/************************ Functions Declarations ******************************/
+/******************************************************************************/
+static int32_t ad4170_iio_reg_read(struct ad4170_iio_device *dev,
+				   uint32_t reg, uint32_t *readval);
+static int32_t ad4170_iio_reg_write(struct ad4170_iio_device *dev,
+				    uint32_t reg, uint32_t writeval);
+static int ad4170_iio_read_raw(void *ddev, char *buf, uint32_t len,
+			       const struct iio_ch_info *channel, intptr_t priv);
+static int ad4170_iio_read_scale(void *ddev, char *buf, uint32_t len,
+				 const struct iio_ch_info *channel, intptr_t priv);
 
 /******************************************************************************/
 /************************ Variable Declarations *******************************/
@@ -98,6 +66,41 @@ static struct iio_attribute ad4170_iio_attrs[] = {
 		.show   = ad4170_iio_read_scale,
 	},
 	END_ATTRIBUTES_ARRAY
+};
+
+static struct scan_type ad4170_signed_scan_type = {
+	.sign = 's',
+	.realbits = AD4170_PRECISION_BITS,
+	.storagebits = 32,
+	.shift = 8,
+	.is_big_endian = true,
+};
+
+static struct scan_type ad4170_unsigned_scan_type = {
+	.sign = 'u',
+	.realbits = AD4170_PRECISION_BITS,
+	.storagebits = 32,
+	.shift = 8,
+	.is_big_endian = true,
+};
+
+static struct iio_channel ad4170_channels[] = {
+	{
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = index,
+		.scan_type = &ad4170_signed_scan_type,
+		.scan_index = index,
+		.attributes = ad4170_iio_attrs,
+		.ch_out = false
+	},
+};
+
+static struct iio_device ad4170_iio_dev = {
+	.num_ch = NO_OS_ARRAY_SIZE(ad4170_channels),
+	.channels = ad4170_channels,
+	.debug_reg_read = (int32_t (*)()) ad4170_iio_reg_read,
+	.debug_reg_write = (int32_t (*)()) ad4170_iio_reg_write,
 };
 
 /******************************************************************************/
@@ -137,178 +140,85 @@ static int32_t ad4170_iio_reg_write(struct ad4170_iio_device *dev,
 	return ad4170_spi_reg_write(dev->dev, ad4170_regs[ri], writeval)
 }
 
-static struct iio_attribute ad4170_debug_attrs[] = {
-	AD4170_IIO_CH_ATTR_RO("pout", AD4170_POUT),
-	AD4170_IIO_CH_ATTR_RO("pin", AD4170_PIN),
-	AD4170_IIO_CH_ATTR_RO("efficiency", AD4170_EFF),
-	AD4170_IIO_CH_ATTR_RO("charging_stage", AD4170_CHARGING_STAGE),
-	AD4170_IIO_CH_ATTR_RO("charging_status", AD4170_CHARGING_STATUS),
-	AD4170_IIO_CH_ATTR_RW("enable", AD4170_ENABLE),
-	AD4170_IIO_CH_ATTR_WO("reset", AD4170_RESTART),
-	AD4170_IIO_CH_ATTR_RW("scratch", AD4170_SCRATCH),
-	AD4170_IIO_CH_ATTR_RO("serial_id", AD4170_SERIAL_ID),
-	END_ATTRIBUTES_ARRAY
-};
-
-static int ad4170_read_raw(void *ddev, char *buf, uint32_t len,
-			   const struct iio_ch_info *channel, intptr_t priv)
+/***************************************************************************//**
+ * @brief Handles the read request for raw attribute.
+ *
+ * @param dev     - The iio device structure.
+ * @param buf	  - Command buffer to be filled with requested data.
+ * @param len     - Length of the received command buffer in bytes.
+ * @param channel - Command channel info.
+ * @param priv    - Command attribute id.
+ *
+ * @return ret    - Result of the reading procedure.
+ *		    In case of success, the size of the read data is returned.
+*******************************************************************************/
+static int ad4170_iio_read_raw(void *ddev, char *buf, uint32_t len,
+			       const struct iio_ch_info *channel, intptr_t priv)
 {
 	struct ad4170_iio_device *dev = ddev;
-	int ret;
+	struct ad4170_dev *dev = dev->dev;
+	struct ad4170_config *config = &dev->config;
 	int32_t val;
-	uint32_t uval;
+	int ret;
 
+	ret = ad4170_set_channel_en(dev->dev, channel->chan_num);
+	if (ret)
+		return ret;
 
+	ret = ad4170_get_ch_data(dev->dev, channel->cha, &val);
+	if (ret)
+		return ret;
 
-	switch (priv) {
-	case AD4170_RAW:
-		ret = ad4170_set_channel_en(dev->dev, uint16_t channel_en)
-		if (ret)
-			return ret;
+	if (config->setups.afe.bipolar)
+		val = no_os_sign_extend32(val, channel->scan_type.realbits - 1);
 
-		ret = ad4170_get_ch_data(dev->dev, channel->cha, &val);
-		if (ret)
-			return ret;
-
-		val /= 100;
-
-		return iio_format_value(buf, len, IIO_VAL_INT, 1, &val);
-	case AD4170_SCALE:
-		ret = ad4170_read_iout(dev->dev, &uval);
-		if (ret)
-			return ret;
-
-		////bipolar?
-		//*data = no_os_sign_extend32(reg, );
-
-		val = uval;
-
-		return iio_format_value(buf, len, IIO_VAL_INT, 1, &val);
-	default:
-		return -EOPNOTSUPP;
-	}
+	return iio_format_value(buf, len, IIO_VAL_INT, 1, &val);
 }
 
+/***************************************************************************//**
+ * @brief Handles the read request for scale attribute.
+ *
+ * @param dev     - The iio device structure.
+ * @param buf	  - Command buffer to be filled with requested data.
+ * @param len     - Length of the received command buffer in bytes.
+ * @param channel - Command channel info.
+ * @param priv    - Command attribute id.
+ *
+ * @return ret    - Result of the reading procedure.
+ * 		    In case of success, the size of the read data is returned.
+*******************************************************************************/
 static int ad4170_iio_read_scale(void *ddev, char *buf, uint32_t len,
 				 const struct iio_ch_info *channel, intptr_t priv)
 {
-	int32_t val;
+	struct ad4170_iio_device *dev = ddev;
+	struct ad4170_dev *dev = dev->dev;
+	struct ad4170_config *config = &dev->config;
+	int32_t vals[2];
 
-	switch (priv) {
-	case AD4170_RAW:
-		val = 100;
-		return iio_format_value(buf, len, IIO_VAL_INT, 1, &val);
-	case AD4170_SCALE:
-		val = 1;
-
-		return iio_format_value(buf, len, IIO_VAL_INT, 1, &val);
-	default:
+	switch (config->setups.afe.ref_select) {
+	case AD4170_REFIN_REFIN1:
+	case AD4170_REFIN_REFIN2:
 		return -EOPNOTSUPP;
+	case AD4170_REFIN_REFOUT:
+		vals[0] = 2500; /* 2.5V internal reference */
+		break;
+	case AD4170_REFIN_AVDD:
+		vals[0] = 5000; /* 5V supply */
+		break;
 	}
+
+	/*
+	 * When bipolar config is set, data is output in two's complement and
+	 * one of the output bits is used for sign indication, leaving only 23
+	 * bit left for expressing voltage magnitude.
+	 */
+	if (config->setups.afe.bipolar)
+		vals[1] = channel->scan_type.realbits - 1;
+	else
+		vals[1] = channel->scan_type.realbits;
+
+	return iio_format_value(buf, len, IIO_VAL_FRACTIONAL_LOG2, 1, &val);
 }
-
-static struct scan_type ad4170_signed_scan_type = {
-	.sign = 's',
-	.realbits = 16,
-	.storagebits = 16,
-	.shift = 0,
-	.is_big_endian = false,
-};
-
-static struct scan_type ad4170_unsigned_scan_type = {
-	.sign = 'u',
-	.realbits = 16,
-	.storagebits = 16,
-	.shift = 0,
-	.is_big_endian = false,
-};
-
-static struct iio_attribute ad4170_temp_ch_attrs[] = {
-	AD4170_IIO_CH_ATTR_READ_RAW("raw", AD4170_TBAT),
-	AD4170_IIO_CH_ATTR_READ_SCALE("scale", AD4170_TBAT),
-	END_ATTRIBUTES_ARRAY
-};
-
-static struct iio_attribute ad4170_out_current_ch_attrs[] = {
-	AD4170_IIO_CH_ATTR_READ_RAW("raw", AD4170_IOUT),
-	AD4170_IIO_CH_ATTR_READ_SCALE("scale", AD4170_IOUT),
-	END_ATTRIBUTES_ARRAY
-};
-
-static struct iio_attribute ad4170_in_current_ch_attrs[] = {
-	AD4170_IIO_CH_ATTR_READ_RAW("supply_raw", AD4170_IIN),
-	AD4170_IIO_CH_ATTR_READ_SCALE("supply_scale", AD4170_IIN),
-	END_ATTRIBUTES_ARRAY
-};
-
-static struct iio_attribute ad4170_out_voltage_ch_attrs[] = {
-	AD4170_IIO_CH_ATTR_READ_RAW("raw", AD4170_VBAT),
-	AD4170_IIO_CH_ATTR_READ_SCALE("scale", AD4170_VBAT),
-	END_ATTRIBUTES_ARRAY
-};
-
-static struct iio_attribute ad4170_in_voltage_ch_attrs[] = {
-	AD4170_IIO_CH_ATTR_READ_RAW("supply_raw", AD4170_VIN),
-	AD4170_IIO_CH_ATTR_READ_SCALE("supply_scale", AD4170_VIN),
-	END_ATTRIBUTES_ARRAY
-};
-
-static struct iio_channel ad4170_channels[] = {
-	{
-		.name = "temp",
-		.ch_type = IIO_TEMP,
-		.channel = 0,
-		.address = 0,
-		.scan_index = 0,
-		.scan_type = &ad4170_signed_scan_type,
-		.attributes = ad4170_temp_ch_attrs,
-		.ch_out = false,
-	}, {
-		.name = "current",
-		.ch_type = IIO_CURRENT,
-		.channel = 0,
-		.address = 0,
-		.scan_index = 0,
-		.scan_type = &ad4170_unsigned_scan_type,
-		.attributes = ad4170_out_current_ch_attrs,
-		.ch_out = true,
-	}, {
-		.name = "current",
-		.ch_type = IIO_CURRENT,
-		.channel = 0,
-		.address = 0,
-		.scan_index = 0,
-		.scan_type = &ad4170_unsigned_scan_type,
-		.attributes = ad4170_in_current_ch_attrs,
-		.ch_out = false,
-	}, {
-		.name = "voltage",
-		.ch_type = IIO_VOLTAGE,
-		.channel = 0,
-		.address = 0,
-		.scan_index = 0,
-		.scan_type = &ad4170_unsigned_scan_type,
-		.attributes = ad4170_out_voltage_ch_attrs,
-		.ch_out = true,
-	}, {
-		.name = "voltage",
-		.ch_type = IIO_VOLTAGE,
-		.channel = 0,
-		.address = 0,
-		.scan_index = 0,
-		.scan_type = &ad4170_unsigned_scan_type,
-		.attributes = ad4170_in_voltage_ch_attrs,
-		.ch_out = false,
-	}
-};
-
-static struct iio_device ad4170_iio_dev = {
-	.num_ch = NO_OS_ARRAY_SIZE(ad4170_channels),
-	.channels = ad4170_channels,
-	.debug_reg_read = (int32_t (*)()) ad4170_iio_reg_read,
-	.debug_reg_write = (int32_t (*)()) ad4170_iio_reg_write,
-	.debug_attributes = ad4170_debug_attrs,
-};
 
 /**
  * @brief Initializes the AD4170 IIO driver
