@@ -766,6 +766,11 @@ int32_t ad463x_init(struct ad463x_dev **device,
 		case ID_ADAQ4216:
 			dev->real_bits_precision = 16;
 			break;
+		case ID_AD4630_20:
+		case ID_AD4631_20:
+		case ID_AD4632_20:
+			dev->real_bits_precision = 20;
+			break;
 		default:
 			dev->real_bits_precision = 24;
 		}

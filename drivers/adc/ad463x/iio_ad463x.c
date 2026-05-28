@@ -52,7 +52,11 @@ static int32_t _iio_ad463x_read_dev(struct iio_ad463x *desc, uint32_t *buff,
 static int32_t _iio_ad463x_prepare_transfer(struct iio_ad463x *desc,
 		uint32_t mask);
 #define BITS_PER_SAMPLE 32
+#if AD4630_20_DEV
+#define REAL_BITS 20
+#else
 #define REAL_BITS 24
+#endif
 
 static struct scan_type adc_scan_type = {
 	.sign = 's',
