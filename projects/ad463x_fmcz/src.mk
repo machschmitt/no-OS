@@ -64,7 +64,9 @@ INCS += $(DRIVERS)/axi_core/axi_dmac/axi_dmac.h \
 	$(DRIVERS)/axi_core/axi_pwmgen/axi_pwm_extra.h \
 	$(DRIVERS)/platform/xilinx/xilinx_spi.h
 
-ifeq (3,$(strip $(AD463X_ID)))
+ifeq (4,$(strip $(AD463X_ID)))
+CFLAGS += -DAD4630_20_DEV
+else ifeq (3,$(strip $(AD463X_ID)))
 CFLAGS += -DADAQ4216_DEV
 else ifeq (2,$(strip $(AD463X_ID)))
 CFLAGS += -DADAQ4224_DEV
