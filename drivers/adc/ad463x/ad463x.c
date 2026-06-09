@@ -760,6 +760,9 @@ int32_t ad463x_init(struct ad463x_dev **device,
 	switch (dev->output_mode) {
 	case AD463X_24_DIFF:
 		switch (dev->device_id) {
+		case ID_AD4630_16:
+		case ID_AD4631_16:
+		case ID_AD4632_16:
 		case ID_ADAQ4216:
 			dev->real_bits_precision = 16;
 			break;
