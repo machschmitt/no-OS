@@ -167,6 +167,25 @@ enum ad463x_id {
 };
 
 /**
+ * @enum ad463x_chip_precision
+ * @brief Amount of precison bits on default output mode.
+ */
+uint8_t ad463x_chip_precision[] = {
+	[ID_AD4630_24] = 24,
+	[ID_AD4630_20] = 20,
+	[ID_AD4630_16] = 16,
+	[ID_AD4631_24] = 24,
+	[ID_AD4631_20] = 20,
+	[ID_AD4631_16] = 16,
+	[ID_AD4632_24] = 24,
+	[ID_AD4632_20] = 20,
+	[ID_AD4632_16] = 16,
+	[ID_AD4030] = 24,
+	[ID_ADAQ4216] = 16,
+	[ID_ADAQ4224] = 24,
+};
+
+/**
  * @enum ad463x_pgia_gain
  * @brief Available pgia gains.
  */
